@@ -132,8 +132,14 @@ def build_argv(
     episodes: list[int] | None = None,
     pretrained: str | None = None,
     extra: str = "",
+    rename_map: str = "",
 ) -> list[str]:
-    """Assemble the lerobot-train flag list for act / smolvla / pi05 / diffusion."""
+    """Assemble the lerobot-train flag list for act / smolvla / pi05 / diffusion.
+
+    rename_map: JSON dict mapping the dataset's observation keys onto the pretrained policy's expected
+    keys, e.g. '{"observation.images.top":"observation.images.camera1",
+    "observation.images.wrist":"observation.images.camera2"}'. Needed whenever a base model (smolvla_base,
+    pi05_base) was pretrained with different camera names than the dataset. Fine-tuning only."""
     argv = [
         f"--dataset.repo_id={dataset}",
         f"--output_dir={OUTPUTS_DIR}/{job_name}",
@@ -149,6 +155,8 @@ def build_argv(
     ]
     if episodes is not None:
         argv.append("--dataset.episodes=[" + ",".join(str(e) for e in episodes) + "]")
+    if rename_map:
+        argv.append(f"--rename_map={rename_map}")
 
     if policy == "act":
         argv.append(f"--policy.path={pretrained}" if pretrained else "--policy.type=act")
@@ -205,6 +213,19 @@ def pull(job_name: str, dest: str = ""):
     print(f"[pull] load with: ACTPolicy.from_pretrained('{out}')  (or the matching policy class)")
 
 
+def parse_episodes(spec: str) -> list[int]:
+    """"0-49" -> [0..49]; "0-24,50-74" -> both ranges; "3,7" -> [3, 7]."""
+    out: list[int] = []
+    for part in spec.split(","):
+        part = part.strip()
+        if "-" in part:
+            a, b = part.split("-")
+            out.extend(range(int(a), int(b) + 1))
+        elif part:
+            out.append(int(part))
+    return out
+
+
 @app.local_entrypoint()
 def main(
     dataset: str = DEFAULT_DATASET,
@@ -215,11 +236,17 @@ def main(
     job_name: str = "",
     pretrained: str = "",
     extra: str = "",
+    episodes: str = "",
+    rename_map: str = "",
     dry_run: bool = False,
 ):
-    """Train one policy on one dataset. See module docstring for examples."""
-    job = job_name or f"{policy}_{dataset.split('/')[-1]}_{steps}"
-    argv = build_argv(dataset, policy, job, steps, batch_size, pretrained=pretrained or None, extra=extra)
+    """Train one policy on one dataset. See module docstring for examples.
+
+    --episodes "0-49" or "0-24,50-74" restricts training to those episode indices (inclusive ranges).
+    """
+    ep_list = parse_episodes(episodes) if episodes else None
+    job = job_name or f"{policy}_{dataset.split('/')[-1]}_{steps}" + (f"_ep{episodes.replace(',', '_')}" if episodes else "")
+    argv = build_argv(dataset, policy, job, steps, batch_size, episodes=ep_list, pretrained=pretrained or None, extra=extra, rename_map=rename_map)
     print(f"[modal_train] job={job} gpu={gpu}")
     print("[modal_train] lerobot-train", " ".join(argv))
     if dry_run:

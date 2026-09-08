@@ -66,6 +66,10 @@ image = (
 )
 
 hf_cache = modal.Volume.from_name("lerobot-hf-cache", create_if_missing=True)
+# Trained checkpoints live on the outputs Volume, so the client can name one as
+# /outputs/<job>/checkpoints/last/pretrained_model instead of pushing it to the Hub.
+outputs = modal.Volume.from_name("lerobot-outputs", create_if_missing=True)
+OUTPUTS_DIR = "/outputs"
 
 local_tokens = modal.Secret.from_dict(
     {k: v for k, v in {"HF_TOKEN": os.environ.get("HF_TOKEN", "")}.items() if v}
@@ -75,7 +79,7 @@ local_tokens = modal.Secret.from_dict(
 @app.function(
     image=image,
     gpu=DEFAULT_GPU,
-    volumes={HF_CACHE_DIR: hf_cache},
+    volumes={HF_CACHE_DIR: hf_cache, OUTPUTS_DIR: outputs},
     secrets=[local_tokens],
     timeout=4 * 60 * 60,
     cpu=4,

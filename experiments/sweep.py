@@ -17,6 +17,7 @@ the plot know exactly which episodes each checkpoint saw. Add `--dry-run` to pri
 from __future__ import annotations
 
 import json
+import os
 import random
 import sys
 from pathlib import Path
@@ -25,24 +26,53 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import modal  # noqa: E402
 
-from modal_train import DEFAULT_DATASET, DEFAULT_GPU, app, build_argv, pull_command, train  # noqa: E402
+from modal_train import DEFAULT_DATASET, DEFAULT_GPU, app, build_argv, parse_episodes, pull_command, train  # noqa: E402
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
 
 def dataset_num_episodes(repo_id: str) -> int:
-    """Read total_episodes from meta/info.json on the Hub without downloading the dataset."""
-    from urllib.request import urlopen
+    """Read total_episodes from meta/info.json on the Hub without downloading the dataset.
 
+    Sends the Hugging Face token (HF_TOKEN, or the `hf auth login` file) so private datasets work too.
+    """
+    from urllib.request import Request, urlopen
+
+    token = os.environ.get("HF_TOKEN")
+    if not token:
+        token_file = Path.home() / ".cache" / "huggingface" / "token"
+        token = token_file.read_text().strip() if token_file.exists() else ""
     url = f"https://huggingface.co/datasets/{repo_id}/resolve/main/meta/info.json"
-    with urlopen(url, timeout=30) as r:  # noqa: S310
+    req = Request(url, headers={"Authorization": f"Bearer {token}"} if token else {})
+    with urlopen(req, timeout=30) as r:  # noqa: S310
         return int(json.load(r)["total_episodes"])
 
 
-def nested_subsets(total: int, sizes: list[int], seed: int) -> dict[int, list[int]]:
-    order = list(range(total))
-    random.Random(seed).shuffle(order)
-    return {n: sorted(order[:n]) for n in sizes}
+def nested_subsets(total: int, sizes: list[int], seed: int, strata: int = 0, pool: list[int] | None = None) -> dict[int, list[int]]:
+    """Nested seeded subsets. With strata=K, episodes are grouped in contiguous blocks of K (one task
+    per block, the way record_r2.sh lays them out) and every subset takes an equal share from each
+    block, so a 10-episode subset of a four-task dataset holds 3/3/2/2 rather than whatever a plain
+    shuffle happens to give (seed 0 gave 6/1/1/2)."""
+    rng = random.Random(seed)
+    ids = pool if pool is not None else list(range(total))
+    if not strata:
+        order = list(ids)
+        rng.shuffle(order)
+        return {n: sorted(order[:n]) for n in sizes}
+    blocks = [ids[i : i + strata] for i in range(0, len(ids), strata)]
+    for b in blocks:
+        rng.shuffle(b)
+    out = {}
+    for n in sizes:
+        picked, i = [], 0
+        while len(picked) < n:  # round-robin over the blocks so shares differ by at most one
+            b = blocks[i % len(blocks)]
+            k = i // len(blocks)
+            if k < len(b):
+                picked.append(b[k])
+            i += 1
+        out[n] = sorted(picked)
+    return out
 
 
 @app.local_entrypoint()
@@ -54,19 +84,24 @@ def sweep(
     batch_size: int = 64,
     gpu: str = DEFAULT_GPU,
     seed: int = 0,
+    strata: int = 0,
+    pool: str = "",
+    rename_map: str = "",
     tag: str = "",
     dry_run: bool = False,
 ):
     wanted = [int(s) for s in sizes.split(",") if s.strip()]
     total = dataset_num_episodes(dataset)
-    usable = [n for n in wanted if n <= total]
-    skipped = [n for n in wanted if n > total]
+    pool_ids = parse_episodes(pool) if pool else None
+    limit = len(pool_ids) if pool_ids else total
+    usable = [n for n in wanted if n <= limit]
+    skipped = [n for n in wanted if n > limit]
     if skipped:
-        print(f"[sweep] dataset has {total} episodes; skipping sizes {skipped}")
+        print(f"[sweep] {'pool' if pool_ids else 'dataset'} has {limit} episodes; skipping sizes {skipped}")
     if not usable:
         raise SystemExit("[sweep] nothing to run")
 
-    subsets = nested_subsets(total, usable, seed)
+    subsets = nested_subsets(total, usable, seed, strata, pool_ids)
     name = dataset.split("/")[-1]
     jobs = {n: f"{policy}_{name}_n{n}_s{seed}{('_' + tag) if tag else ''}" for n in usable}
 
@@ -74,6 +109,8 @@ def sweep(
         "dataset": dataset,
         "policy": policy,
         "seed": seed,
+        "strata": strata,
+        "pool": pool,
         "steps": steps,
         "batch_size": batch_size,
         "gpu": gpu,
@@ -84,7 +121,7 @@ def sweep(
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     manifest_path = RESULTS_DIR / f"sweep_{policy}_{name}_s{seed}{('_' + tag) if tag else ''}.json"
 
-    argvs = {n: build_argv(dataset, policy, jobs[n], steps, batch_size, episodes=subsets[n]) for n in usable}
+    argvs = {n: build_argv(dataset, policy, jobs[n], steps, batch_size, episodes=subsets[n], rename_map=rename_map) for n in usable}
     for n in usable:
         print(f"[sweep] n={n:>3} job={jobs[n]} episodes={subsets[n]}")
         print("        lerobot-train", " ".join(argvs[n]))

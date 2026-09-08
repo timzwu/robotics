@@ -47,20 +47,34 @@ FIELDS = [
     "notes", "timestamp", "policy", "mode",
 ]
 FAILURE_TYPES = {
-    "1": "miss_grasp",      # never got the block
-    "2": "drop",            # grasped, dropped before the bowl
-    "3": "wrong_bowl",      # placed in the other bowl
-    "4": "no_move",         # policy froze / barely moved
-    "5": "timeout",         # still going when time ran out
-    "6": "collision",       # hit bowl/table/arm hard enough to stop
-    "7": "other",
+    "1": "no_reach",        # never got near the block
+    "2": "touch_no_grip",   # reached / touched the block but never closed on it
+    "3": "drop",            # grasped, dropped before the bowl
+    "4": "wrong_bowl",      # placed in the other bowl
+    "5": "no_move",         # policy froze / barely moved
+    "6": "timeout",         # still going when time ran out
+    "7": "collision",       # hit bowl/table/arm hard enough to stop (incl. grasped-then-hit-bowl)
+    "8": "other",
 }
 # Four block/bowl combos, cycled so every 4 positions cover all of them.
 COMBOS = [("red", "left"), ("blue", "right"), ("red", "right"), ("blue", "left")]
 
 
-def combo_for(position: int) -> tuple[str, str]:
-    return COMBOS[(position - 1) % len(COMBOS)]
+def combo_for(position: int, combos: list[tuple[str, str]] = COMBOS) -> tuple[str, str]:
+    return combos[(position - 1) % len(combos)]
+
+
+def parse_combos(spec: str) -> list[tuple[str, str]]:
+    """"red:left,blue:right" -> [("red","left"),("blue","right")]. Empty -> all four."""
+    if not spec:
+        return COMBOS
+    out = []
+    for part in spec.split(","):
+        color, bowl = part.strip().split(":")
+        if (color, bowl) not in COMBOS:
+            raise SystemExit(f"unknown combo {part!r}; choose from {COMBOS}")
+        out.append((color, bowl))
+    return out
 
 
 def task_for(color: str, bowl: str) -> str:
@@ -94,13 +108,15 @@ def build_command(args, task: str) -> list[str] | None:
     ]
     # Safety clamp: max degrees the follower may move per control step. Keeps a bad policy from
     # lunging into the table on a first zero-shot run. Omitted entirely when absent/null.
-    if robot.get("max_relative_target") is not None:
-        common.append(f"--robot.max_relative_target={robot['max_relative_target']}")
+    clamp = robot.get("max_relative_target") if args.clamp is None else (args.clamp or None)
+    if clamp is not None:
+        common.append(f"--robot.max_relative_target={clamp}")
     if args.mode == "local":
         if not args.policy:
             sys.exit("--policy (checkpoint path or Hub id) is required for --mode local")
         return [
-            "lerobot-rollout", "--strategy.type=base", f"--policy.path={args.policy}", *common,
+            "lerobot-rollout", "--strategy.type=base", f"--policy.path={args.policy}",
+            f"--policy.device={args.local_device}", *common,
             f"--task={task}", f"--duration={args.duration}",
         ]
     if args.mode == "async":
@@ -220,10 +236,15 @@ def main() -> None:
     ap.add_argument("--policy", default="", help="checkpoint dir / Hub id (local), or Hub id on the server (async)")
     ap.add_argument("--policy-type", default="", help="async only: act | smolvla | pi05")
     ap.add_argument("--policy-device", default="cuda", help="async only: device on the policy server")
+    ap.add_argument("--local-device", default="mps", help="local only: device on the Mac (mps or cpu)")
+    ap.add_argument("--clamp", type=float, default=None, help="override robot.json max_relative_target "
+                    "(degrees per step); 0 disables the clamp. Default: use robot.json")
     ap.add_argument("--server", default="", help="async only: host:port of the policy server")
     ap.add_argument("--actions-per-chunk", type=int, default=50)
     ap.add_argument("--chunk-size-threshold", type=float, default=0.5)
     ap.add_argument("--positions", type=int, default=20, help="number of dot positions (default 20)")
+    ap.add_argument("--combos", default="", help='restrict tasks, e.g. "red:left,blue:right" for a policy '
+                    "that was only trained on those (default: cycle all four)")
     ap.add_argument("--duration", type=float, default=30.0, help="seconds per trial")
     ap.add_argument("--out", default="", help="CSV path (default experiments/results/<name>.csv)")
     ap.add_argument("--summary", metavar="CSV", help="print the summary for an existing CSV and exit")
@@ -235,6 +256,7 @@ def main() -> None:
     if not args.name:
         ap.error("--name is required")
 
+    combos = parse_combos(args.combos)
     out = Path(args.out) if args.out else RESULTS_DIR / f"{args.name}.csv"
     done = done_positions(out)
     todo = [p for p in range(1, args.positions + 1) if p not in done]
@@ -245,7 +267,7 @@ def main() -> None:
 
     try:
         for pos in todo:
-            color, bowl = combo_for(pos)
+            color, bowl = combo_for(pos, combos)
             task = task_for(color, bowl)
             print(f"\n=== Position {pos}/{args.positions}: {color.upper()} block on dot {pos}, target {bowl.upper()} bowl")
             input("  Place the block, clear the mat, then press Enter to start... ")
