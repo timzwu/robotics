@@ -8,6 +8,8 @@ Modes (--mode):
   local   ACT on the Mac:      runs `lerobot-rollout --strategy.type=base --policy.path=<ckpt>`
   async   SmolVLA / pi0.5:     runs `python -m lerobot.async_inference.robot_client` against a policy
                                server (Modal, or local) for --duration seconds, then stops it
+  sync    SmolVLA / pi0.5 on the Mac: runs `experiments/sync_rollout.py` (predict a chunk, execute it,
+                               repeat; ~0.8 s think pause per chunk). The eval path used for R3/R4.
   manual  no robot command:    you run the policy yourself; this just drives the protocol + CSV.
                                Use it to test the script without hardware.
 
@@ -87,6 +89,15 @@ def load_robot() -> dict:
     return json.loads(ROBOT_JSON.read_text())
 
 
+def rename_cameras(cams: dict, spec: str) -> dict:
+    """"top=camera1,wrist=camera2" -> the same camera dict under the policy's names. For checkpoints
+    trained with --rename_map (smolvla_base / pi05_base fine-tunes expect camera1/camera2)."""
+    if not spec:
+        return cams
+    mapping = dict(part.split("=") for part in spec.split(","))
+    return {mapping.get(k, k): v for k, v in cams.items()}
+
+
 def cameras_arg(cams: dict) -> str:
     inner = ", ".join(
         f"{k}: {{type: {v['type']}, index_or_path: {v['index_or_path']}, width: {v['width']}, "
@@ -104,7 +115,7 @@ def build_command(args, task: str) -> list[str] | None:
         f"--robot.type={robot.get('robot_type', 'so101_follower')}",
         f"--robot.port={robot['port']}",
         f"--robot.id={robot['id']}",
-        f"--robot.cameras={cameras_arg(robot['cameras'])}",
+        f"--robot.cameras={cameras_arg(rename_cameras(robot['cameras'], args.camera_rename))}",
     ]
     # Safety clamp: max degrees the follower may move per control step. Keeps a bad policy from
     # lunging into the table on a first zero-shot run. Omitted entirely when absent/null.
@@ -119,6 +130,19 @@ def build_command(args, task: str) -> list[str] | None:
             f"--policy.device={args.local_device}", *common,
             f"--task={task}", f"--duration={args.duration}",
         ]
+    if args.mode == "sync":
+        if not (args.policy and args.policy_type):
+            sys.exit("--policy and --policy-type are required for --mode sync")
+        cmd = [
+            sys.executable, str(HERE / "sync_rollout.py"), f"--policy={args.policy}",
+            f"--policy-type={args.policy_type}", f"--task={task}", f"--duration={args.duration}",
+            f"--robot-config={ROBOT_JSON}",
+        ]
+        if args.camera_rename:
+            cmd.append(f"--camera-rename={args.camera_rename}")
+        if args.clamp is not None:
+            cmd.append(f"--clamp={args.clamp}")
+        return cmd
     if args.mode == "async":
         if not (args.policy and args.policy_type):
             sys.exit("--policy and --policy-type are required for --mode async")
@@ -134,17 +158,45 @@ def build_command(args, task: str) -> list[str] | None:
     sys.exit(f"unknown mode {args.mode}")
 
 
-def run_trial(cmd: list[str] | None, duration: float) -> float:
+def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None = None) -> float:
     """Run the policy command for up to `duration` seconds. Returns wall time actually used."""
     t0 = time.time()
     if cmd is None:
         input(f"  Run the policy now (~{duration:.0f}s). Press Enter when the trial is over... ")
         return time.time() - t0
     print("  $", " ".join(shlex.quote(c) for c in cmd))
-    proc = subprocess.Popen(cmd)
+    if start_marker is None:
+        proc = subprocess.Popen(cmd)
+        try:
+            proc.wait(timeout=duration + 60)  # rollout stops itself at --duration; +60 s for model load and think pauses
+        except subprocess.TimeoutExpired:
+            proc.send_signal(signal.SIGINT)
+            try:
+                proc.wait(timeout=10)
+            except subprocess.TimeoutExpired:
+                proc.kill()
+        except KeyboardInterrupt:
+            proc.send_signal(signal.SIGINT)
+            proc.wait(timeout=10)
+            raise
+        return time.time() - t0
+
+    # Async client: the clock starts only when the control loop starts (after the server has loaded the
+    # model, which can take 20-30 s on the first trial), so every trial gets the full `duration` of motion.
+    env = dict(os.environ, PYTHONUNBUFFERED="1")  # else the client's log lines arrive in blocks, late
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
+    started = None
     try:
-        proc.wait(timeout=duration + 15)  # rollout stops itself at --duration; +15s for startup
-    except subprocess.TimeoutExpired:
+        for line in proc.stdout:
+            print("   ", line.rstrip()[:160])
+            if started is None and start_marker in line:
+                started = time.time()
+                print(f"  [eval] control loop started; running {duration:.0f}s")
+            if started is not None and time.time() - started >= duration:
+                break
+            if started is None and time.time() - t0 > duration + 120:
+                print("  [eval] client never started its control loop; stopping")
+                break
         proc.send_signal(signal.SIGINT)   # robot_client runs forever; stop it cleanly
         try:
             proc.wait(timeout=10)
@@ -154,7 +206,7 @@ def run_trial(cmd: list[str] | None, duration: float) -> float:
         proc.send_signal(signal.SIGINT)
         proc.wait(timeout=10)
         raise
-    return time.time() - t0
+    return (time.time() - started) if started else (time.time() - t0)
 
 
 def ask_outcome() -> tuple[int, str, str]:
@@ -232,11 +284,13 @@ def summarize(path: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--name", help="condition name, e.g. act_50 (used for the CSV filename)")
-    ap.add_argument("--mode", choices=["local", "async", "manual"], default="manual")
+    ap.add_argument("--mode", choices=["local", "async", "sync", "manual"], default="manual")
     ap.add_argument("--policy", default="", help="checkpoint dir / Hub id (local), or Hub id on the server (async)")
     ap.add_argument("--policy-type", default="", help="async only: act | smolvla | pi05")
     ap.add_argument("--policy-device", default="cuda", help="async only: device on the policy server")
     ap.add_argument("--local-device", default="mps", help="local only: device on the Mac (mps or cpu)")
+    ap.add_argument("--camera-rename", default="", help='send cameras under other names, e.g. '
+                    '"top=camera1,wrist=camera2" for a checkpoint fine-tuned from smolvla_base')
     ap.add_argument("--clamp", type=float, default=None, help="override robot.json max_relative_target "
                     "(degrees per step); 0 disables the clamp. Default: use robot.json")
     ap.add_argument("--server", default="", help="async only: host:port of the policy server")
@@ -272,7 +326,7 @@ def main() -> None:
             print(f"\n=== Position {pos}/{args.positions}: {color.upper()} block on dot {pos}, target {bowl.upper()} bowl")
             input("  Place the block, clear the mat, then press Enter to start... ")
             cmd = build_command(args, task)
-            used = run_trial(cmd, args.duration)
+            used = run_trial(cmd, args.duration, start_marker="Control loop thread starting" if args.mode == "async" else None)
             success, ftype, notes = ask_outcome()
             append_row(out, {
                 "name": args.name, "position": pos, "color": color, "bowl": bowl, "task": task,

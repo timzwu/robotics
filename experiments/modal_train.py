@@ -133,6 +133,7 @@ def build_argv(
     pretrained: str | None = None,
     extra: str = "",
     rename_map: str = "",
+    save_freq: int = 0,
 ) -> list[str]:
     """Assemble the lerobot-train flag list for act / smolvla / pi05 / diffusion.
 
@@ -148,7 +149,7 @@ def build_argv(
         "--policy.push_to_hub=false",
         f"--steps={steps}",
         f"--batch_size={batch_size}",
-        f"--save_freq={steps}",
+        f"--save_freq={save_freq or steps}",
         "--log_freq=100",
         "--num_workers=4",
         f"--wandb.enable={'true' if os.environ.get('WANDB_API_KEY') else 'false'}",
@@ -238,21 +239,29 @@ def main(
     extra: str = "",
     episodes: str = "",
     rename_map: str = "",
+    save_freq: int = 10000,
     dry_run: bool = False,
 ):
     """Train one policy on one dataset. See module docstring for examples.
+
+    --save-freq N writes a checkpoint every N steps (default 10000) so a killed run keeps its progress;
+    the final checkpoint is always written at --steps.
 
     --episodes "0-49" or "0-24,50-74" restricts training to those episode indices (inclusive ranges).
     """
     ep_list = parse_episodes(episodes) if episodes else None
     job = job_name or f"{policy}_{dataset.split('/')[-1]}_{steps}" + (f"_ep{episodes.replace(',', '_')}" if episodes else "")
-    argv = build_argv(dataset, policy, job, steps, batch_size, episodes=ep_list, pretrained=pretrained or None, extra=extra, rename_map=rename_map)
+    argv = build_argv(dataset, policy, job, steps, batch_size, episodes=ep_list, pretrained=pretrained or None, extra=extra, rename_map=rename_map, save_freq=save_freq)
     print(f"[modal_train] job={job} gpu={gpu}")
     print("[modal_train] lerobot-train", " ".join(argv))
     if dry_run:
         return
     fn = train if gpu == DEFAULT_GPU else train.with_options(gpu=gpu)
-    result = fn.remote(argv, job)
+    # spawn + get, not .remote(): a spawned call keeps running on Modal if this terminal dies (a .remote()
+    # call under `modal run --detach` did not survive the client being killed on Sept 9).
+    handle = fn.spawn(argv, job)
+    print(f"[modal_train] spawned; safe to close this terminal. Check with: modal app list")
+    result = handle.get()
     print(result if result["returncode"] else {k: v for k, v in result.items() if k != "tail"})
     if result["returncode"] == 0 and result["checkpoint"]:
         print("\nPull the checkpoint to the Mac with:\n  " + pull_command(job))

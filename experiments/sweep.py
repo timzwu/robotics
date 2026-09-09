@@ -87,6 +87,7 @@ def sweep(
     strata: int = 0,
     pool: str = "",
     rename_map: str = "",
+    save_freq: int = 10000,
     tag: str = "",
     dry_run: bool = False,
 ):
@@ -121,7 +122,7 @@ def sweep(
     RESULTS_DIR.mkdir(parents=True, exist_ok=True)
     manifest_path = RESULTS_DIR / f"sweep_{policy}_{name}_s{seed}{('_' + tag) if tag else ''}.json"
 
-    argvs = {n: build_argv(dataset, policy, jobs[n], steps, batch_size, episodes=subsets[n], rename_map=rename_map) for n in usable}
+    argvs = {n: build_argv(dataset, policy, jobs[n], steps, batch_size, episodes=subsets[n], rename_map=rename_map, save_freq=save_freq) for n in usable}
     for n in usable:
         print(f"[sweep] n={n:>3} job={jobs[n]} episodes={subsets[n]}")
         print("        lerobot-train", " ".join(argvs[n]))
