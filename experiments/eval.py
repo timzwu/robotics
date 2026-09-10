@@ -10,6 +10,8 @@ Modes (--mode):
                                server (Modal, or local) for --duration seconds, then stops it
   sync    SmolVLA / pi0.5 on the Mac: runs `experiments/sync_rollout.py` (predict a chunk, execute it,
                                repeat; ~0.8 s think pause per chunk). The eval path used for R3/R4.
+  rtc     SmolVLA on the Mac with LeRobot's Real-Time Chunking backend (`lerobot-rollout --inference.type=rtc`):
+                               continuous motion, next chunk inpainted to agree with the committed prefix.
   manual  no robot command:    you run the policy yourself; this just drives the protocol + CSV.
                                Use it to test the script without hardware.
 
@@ -130,6 +132,19 @@ def build_command(args, task: str) -> list[str] | None:
             f"--policy.device={args.local_device}", *common,
             f"--task={task}", f"--duration={args.duration}",
         ]
+    if args.mode == "rtc":
+        # LeRobot's own Real-Time Chunking backend inside lerobot-rollout: the policy runs on the Mac in a
+        # background thread, the next chunk is generated while the current one executes, and the new chunk is
+        # inpainted to agree with the actions already committed (Black et al. 2025). No think pauses.
+        if not args.policy:
+            sys.exit("--policy (checkpoint path) is required for --mode rtc")
+        return [
+            "lerobot-rollout", "--strategy.type=base", f"--policy.path={args.policy}",
+            f"--policy.device={args.local_device}", "--inference.type=rtc",
+            f"--inference.rtc.execution_horizon={args.rtc_horizon}",
+            f"--inference.rtc.max_guidance_weight={args.rtc_guidance}", *common,
+            f"--task={task}", f"--duration={args.duration}",
+        ]
     if args.mode == "sync":
         if not (args.policy and args.policy_type):
             sys.exit("--policy and --policy-type are required for --mode sync")
@@ -140,6 +155,8 @@ def build_command(args, task: str) -> list[str] | None:
         ]
         if args.camera_rename:
             cmd.append(f"--camera-rename={args.camera_rename}")
+        if args.cameras:
+            cmd.append(f"--cameras={args.cameras}")
         if args.clamp is not None:
             cmd.append(f"--clamp={args.clamp}")
         return cmd
@@ -284,13 +301,16 @@ def summarize(path: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--name", help="condition name, e.g. act_50 (used for the CSV filename)")
-    ap.add_argument("--mode", choices=["local", "async", "sync", "manual"], default="manual")
+    ap.add_argument("--mode", choices=["local", "async", "sync", "rtc", "manual"], default="manual")
     ap.add_argument("--policy", default="", help="checkpoint dir / Hub id (local), or Hub id on the server (async)")
     ap.add_argument("--policy-type", default="", help="async only: act | smolvla | pi05")
     ap.add_argument("--policy-device", default="cuda", help="async only: device on the policy server")
-    ap.add_argument("--local-device", default="mps", help="local only: device on the Mac (mps or cpu)")
+    ap.add_argument("--local-device", default="mps", help="local/rtc: device on the Mac (mps or cpu)")
+    ap.add_argument("--rtc-horizon", type=int, default=10, help="rtc only: execution horizon (steps per chunk executed before re-planning)")
+    ap.add_argument("--rtc-guidance", type=float, default=10.0, help="rtc only: max guidance weight toward the committed prefix")
     ap.add_argument("--camera-rename", default="", help='send cameras under other names, e.g. '
                     '"top=camera1,wrist=camera2" for a checkpoint fine-tuned from smolvla_base')
+    ap.add_argument("--cameras", default="", help='sync only: which robot.json cameras to send, e.g. "top" (default all)')
     ap.add_argument("--clamp", type=float, default=None, help="override robot.json max_relative_target "
                     "(degrees per step); 0 disables the clamp. Default: use robot.json")
     ap.add_argument("--server", default="", help="async only: host:port of the policy server")
