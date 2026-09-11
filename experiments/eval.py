@@ -109,7 +109,7 @@ def cameras_arg(cams: dict) -> str:
     return "{ " + inner + " }"
 
 
-def build_command(args, task: str) -> list[str] | None:
+def build_command(args, task: str, position: int = 0) -> list[str] | None:
     if args.mode == "manual":
         return None
     robot = load_robot()
@@ -159,6 +159,10 @@ def build_command(args, task: str) -> list[str] | None:
             cmd.append(f"--cameras={args.cameras}")
         if args.clamp is not None:
             cmd.append(f"--clamp={args.clamp}")
+        if args.server:  # remote stop-and-go: the chunk comes from a policy server (pi0.5 and other big models)
+            cmd += [f"--server={args.server}", f"--policy-device={args.policy_device}"]
+        if args.record_dir:
+            cmd.append(f"--record={Path(args.record_dir) / f'{args.name}_{position:02d}.mp4'}")
         return cmd
     if args.mode == "async":
         if not (args.policy and args.policy_type):
@@ -311,6 +315,7 @@ def main() -> None:
     ap.add_argument("--camera-rename", default="", help='send cameras under other names, e.g. '
                     '"top=camera1,wrist=camera2" for a checkpoint fine-tuned from smolvla_base')
     ap.add_argument("--cameras", default="", help='sync only: which robot.json cameras to send, e.g. "top" (default all)')
+    ap.add_argument("--record-dir", default="", help="sync only: save each trial's camera frames as <name>_<pos>.mp4 here")
     ap.add_argument("--clamp", type=float, default=None, help="override robot.json max_relative_target "
                     "(degrees per step); 0 disables the clamp. Default: use robot.json")
     ap.add_argument("--server", default="", help="async only: host:port of the policy server")
@@ -345,7 +350,7 @@ def main() -> None:
             task = task_for(color, bowl)
             print(f"\n=== Position {pos}/{args.positions}: {color.upper()} block on dot {pos}, target {bowl.upper()} bowl")
             input("  Place the block, clear the mat, then press Enter to start... ")
-            cmd = build_command(args, task)
+            cmd = build_command(args, task, pos)
             used = run_trial(cmd, args.duration, start_marker="Control loop thread starting" if args.mode == "async" else None)
             success, ftype, notes = ask_outcome()
             append_row(out, {

@@ -24,6 +24,7 @@ import json
 import time
 from pathlib import Path
 
+import cv2
 import numpy as np
 import torch
 
@@ -106,6 +107,8 @@ def main() -> None:
     ap.add_argument("--server", default="", help="host:port of a LeRobot policy server; when set, the chunk is "
                     "fetched from there instead of computed on the Mac (--policy is then a path ON THE SERVER)")
     ap.add_argument("--policy-device", default="cuda", help="remote only: device on the server")
+    ap.add_argument("--record", default="", help="write this trial's camera frames (all cameras side by side) to an mp4 "
+                    "at this path, e.g. experiments/results/trials/pi05_pair_03.mp4")
     ap.add_argument("--cameras", default="", help='comma list of robot.json cameras to send, e.g. "top" for a model '
                     "trained without the wrist stream (default: all)")
     args = ap.parse_args()
@@ -140,6 +143,10 @@ def main() -> None:
                     out.append((a["action"] if isinstance(a, dict) else a)[0].float().cpu().numpy())
             return np.stack(out)
     moved = 0.0
+    rec = None
+    if args.record:
+        Path(args.record).parent.mkdir(parents=True, exist_ok=True)
+        rec = cv2.VideoWriter(args.record, cv2.VideoWriter_fourcc(*"mp4v"), args.fps, (640 * len(cams), 480))
     try:
         for _ in range(int(args.fps)):  # ~1 s of frames so the cameras' exposure settles
             bot.get_observation()
@@ -157,13 +164,19 @@ def main() -> None:
             for a in chunk:
                 cur = cur + np.clip(a - cur, -clamp, clamp)
                 bot.send_action({f"{j}.pos": float(cur[i]) for i, j in enumerate(JOINTS)})
-                time.sleep(1 / args.fps)
+                if rec is not None:
+                    raw = bot.get_observation()
+                    rec.write(np.hstack([cv2.cvtColor(np.ascontiguousarray(raw[k]), cv2.COLOR_RGB2BGR) for k in cams]))
+                else:
+                    time.sleep(1 / args.fps)
                 if moved + (time.time() - t_exec) >= args.duration:
                     break
             moved += time.time() - t_exec
             c += 1
         print(f"[sync] done: {moved:.1f}s of motion in {c} chunks", flush=True)
     finally:
+        if rec is not None:
+            rec.release()
         bot.disconnect()
 
 

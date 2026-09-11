@@ -38,3 +38,7 @@ experiments/checkpoints/
 .agent-private/
 CLAUDE.local.md
 logs/
+
+# rendered videos (regenerate with experiments/make_teleop_video.py; too large for git)
+experiments/results/*.mp4
+experiments/results/trials/
