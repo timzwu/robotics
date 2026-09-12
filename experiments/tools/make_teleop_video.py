@@ -1,6 +1,6 @@
 """Stitch recorded teleop episodes into one fast-forward mp4 (overhead | wrist side by side).
 
-    python experiments/make_teleop_video.py --episodes 0-49 --speed 10 --out experiments/results/teleop_50eps_10x.mp4
+    python experiments/tools/make_teleop_video.py --episodes 0-49 --speed 10 --out experiments/results/teleop_50eps_10x.mp4
 
 Reads the local LeRobot dataset, takes every `speed`-th frame of each episode, labels it, and writes H.264 via the
 environment's ffmpeg. Episodes are played in the order given.

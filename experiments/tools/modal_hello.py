@@ -1,6 +1,6 @@
 """Hello-world: prove Modal auth, billing, and GPU access end-to-end.
 
-Run once:  modal run experiments/modal_hello.py
+Run once:  modal run experiments/tools/modal_hello.py
 
 It builds a small image with torch, spins up a T4 GPU for a few seconds,
 confirms CUDA is visible, and prints the GPU name back on your Mac. First run

@@ -2,9 +2,9 @@
 # R2: record the dataset in runs of 25, one task string per run, into ONE local dataset.
 # Runs 1-4 cover the four tasks (ep 0-99); runs 5-6 add 25 more of the base pair (ep 100-149) so the
 # two-task pool is 100 episodes, 50 per task.
-# Usage: bash experiments/record_r2.sh <run 1-6> [dataset name]   (run 1 creates, later runs resume)
+# Usage: bash experiments/tools/record_r2.sh <run 1-6> [dataset name]   (run 1 creates, later runs resume)
 # Pushed to the Hub privately afterwards from Python (push_to_hub stays false here so a crash mid-run
-# never leaves a half-uploaded repo). Ports and camera indices match experiments/robot.json.
+# never leaves a half-uploaded repo). Ports and camera indices match experiments/tools/robot.json.
 # "left"/"right" are from the OPERATOR seat facing the arm, which is mirrored in the overhead camera
 # (operator-left = image-right). The eval protocol uses the same convention.
 set -euo pipefail

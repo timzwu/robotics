@@ -17,6 +17,23 @@ randomization zone, 20 numbered dot stickers as fixed eval positions, two bowls.
 Outcome + failure type per trial. With N=20 the 95% interval at 50% success is roughly +/-22 points,
 so results are reported with intervals, not point estimates.
 
+## Layout (reorganized 2026-09-13)
+
+| path | what |
+|---|---|
+| `tools/` | every script: Modal trainer and sweep, policy server, eval protocol, stop-and-go rollout, plots, video cuts, camera preview, `robot.json` |
+| `results/` | cross-cutting files: `training_runs.md` (every training run), `all_trials_wk1.csv` (every eval trial), `sticker_map.json`, the teleop video |
+| `results/01_model_comparison/` | ACT vs SmolVLA vs π0.5 on the trained pair: `comparison_wk1.md` (the write-up), per-pass CSVs, model / progress / geography plots |
+| `results/02_data_scaling/` | SmolVLA at 10 / 25 / 50 / 100 episodes: `scaling_predictions.md`, sweep CSVs and manifest, `scaling.png` |
+| `results/03_instruction_following/` | the pair-trained models on all four instruction combinations |
+| `results/04_camera_ablation/` | overhead-only / wrist-only / both cameras: `ablation_cameras.md` |
+| `results/05_execution_method/` | stop-and-go vs Real-Time Chunking on one checkpoint: `smolvla100_rtc.md` |
+| `results/06_general_llm/` | a general language model driving the arm through gripper poses (GPT-6 Astra); in progress |
+| `results/trials/` | per-trial videos (gitignored, regenerate with the eval's `--record-dir`) |
+| `checkpoints/` | pulled model checkpoints (gitignored) |
+
+Scripts find a result CSV by name in any experiment folder; pass `--out experiments/results/<experiment>/<name>.csv` when starting a new pass.
+
 ## Files
 
 | File | What | Runs where |
@@ -34,12 +51,12 @@ Proves dataset -> Modal -> checkpoint -> Mac before any of our own data exists.
 
 ```bash
 # 1. ACT, 2000 steps, on lerobot/svla_so101_pickplace (50 eps, cameras up+side, red cube -> gray bowl)
-modal run --detach experiments/modal_train.py --steps 2000 --batch-size 8
+modal run --detach experiments/tools/modal_train.py::main --steps 2000 --batch-size 8 --yes
 # 2. parallel sweep launches (tiny)
-modal run experiments/sweep.py::sweep --sizes 5,10 --steps 200 --policy act --batch-size 8
+modal run experiments/tools/sweep.py::sweep --sizes 5,10 --steps 200 --policy act --batch-size 8
 # 3. pull the checkpoint (exact command is printed at the end of step 1; plain `modal volume get` on
 #    checkpoints/last fails because `last` is a symlink and the dir may hold a stray .tmp save file)
-modal run experiments/modal_train.py::pull --job-name act_svla_so101_pickplace_2000
+modal run experiments/tools/modal_train.py::pull --job-name act_svla_so101_pickplace_2000
 # 4. load it on the Mac
 python -c "from lerobot.policies.act.modeling_act import ACTPolicy; p=ACTPolicy.from_pretrained('experiments/checkpoints/act_svla_so101_pickplace_2000'); print(p.config)"
 ```
@@ -51,14 +68,14 @@ python -c "from lerobot.policies.act.modeling_act import ACTPolicy; p=ACTPolicy.
 lerobot-record ... --dataset.repo_id=$HF_USER/so101_blocks --dataset.private=true --dataset.single_task="put the red block in the left bowl"
 
 export HF_TOKEN=...   # so Modal can read the private dataset
-modal run --detach experiments/modal_train.py --dataset $HF_USER/so101_blocks --policy act --steps 20000
-modal run --detach experiments/modal_train.py --dataset $HF_USER/so101_blocks --policy smolvla --steps 20000 --batch-size 64 --gpu L40S
-modal run --detach experiments/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50,100 --steps 20000 --batch-size 64 --gpu L40S
+modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy act --steps 20000 --yes
+modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy smolvla --steps 20000 --batch-size 64 --gpu L40S --yes
+modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50,100 --steps 20000 --batch-size 64 --gpu L40S --yes
 
 # eval: ACT locally; VLAs through async inference (policy server on a GPU, Mac as client)
-python experiments/eval.py --mode local --name act_50 --policy experiments/checkpoints/<job>
-python experiments/eval.py --mode async --name smolvla_50 --policy-type smolvla --policy <hub-id> --server <host:port>
-python experiments/eval.py --summary experiments/results/act_50.csv
+python experiments/tools/eval.py --mode local --name act_50 --policy experiments/checkpoints/<job>
+python experiments/tools/eval.py --mode async --name smolvla_50 --policy-type smolvla --policy <hub-id> --server <host:port>
+python experiments/tools/eval.py --summary experiments/results/act_50.csv
 ```
 
 Notes

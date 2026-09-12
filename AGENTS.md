@@ -31,7 +31,7 @@ The experiment plan (one task, three policies, a data-scaling sweep, a camera ab
   `conda activate lerobot` (or prefix `~/miniforge3/envs/lerobot/bin/`).
 - Installed: **lerobot 0.6.1, torch 2.11.0**, ffmpeg 8.x (inside the env, via conda-forge), Feetech SDK
   (`pip install 'lerobot[core_scripts,feetech]'`), `modal` CLI.
-- Training runs on **Modal** (`experiments/modal_train.py`); the Mac does teleop, recording, and eval.
+- Training runs on **Modal** (`experiments/tools/modal_train.py`); the Mac does teleop, recording, and eval.
 - Harmless startup noise on macOS: `objc[...] Class AVFFrameReceiver is implemented in both ... cv2 ... av`.
   Ignore it. Do **not** swap in conda-forge opencv/av to silence it; that adds a second OpenMP runtime next
   to torch's and causes real crashes (`OMP: Error #15`).
@@ -41,10 +41,10 @@ The experiment plan (one task, three policies, a data-scaling sweep, a camera ab
 - Arm ids used everywhere: `follower_arm`, `leader_arm`. Both arms are calibrated; calibration lives in
   `~/.cache/huggingface/lerobot/calibration/` and persists across unplugs. Do not recalibrate by default.
 - Ports are machine-specific and can change on replug: re-run `lerobot-find-port`. Current values are in
-  `scripts/teleop.sh` and `experiments/robot.json`.
+  `scripts/teleop.sh` and `experiments/tools/robot.json`.
 - **Power: 12V 5A to the follower, 5V 4A to the leader. Swapping them burns the motors.**
 - CLI flag gotcha: the follower uses `--robot.*`, the leader uses `--teleop.*`.
-- Cameras: `overhead` and `wrist`, 640x480 at 30 fps, indices in `experiments/robot.json`. Re-enumerate with
+- Cameras: `overhead` and `wrist`, 640x480 at 30 fps, indices in `experiments/tools/robot.json`. Re-enumerate with
   `lerobot-find-cameras opencv` (must run in a terminal that has macOS camera permission).
 
 ## Commands
@@ -56,14 +56,14 @@ lerobot-find-port                                        # once per arm, when a 
 lerobot-find-cameras opencv                              # camera indices + a test frame each
 
 # Modal (costs money; see experiments/README.md for the full recipe)
-modal run experiments/modal_train.py --dry-run           # prints the lerobot-train command, no spend
-modal run --detach experiments/modal_train.py --steps 2000 --batch-size 8
-modal run experiments/modal_train.py::pull --job-name <job>   # copy a checkpoint to experiments/checkpoints/
-modal run experiments/sweep.py::sweep --sizes 5,10 --steps 200 --dry-run
+modal run experiments/tools/modal_train.py::main --dry-run           # prints the lerobot-train command, no spend
+modal run --detach experiments/tools/modal_train.py::main --steps 2000 --batch-size 8 --yes
+modal run experiments/tools/modal_train.py::pull --job-name <job>   # copy a checkpoint to experiments/checkpoints/
+modal run experiments/tools/sweep.py::sweep --sizes 5,10 --steps 200 --dry-run
 
 # Eval protocol (no robot needed in manual mode)
-python experiments/eval.py --mode manual --name test --positions 2 --out /tmp/eval_test.csv
-python experiments/eval.py --summary experiments/results/<name>.csv
+python experiments/tools/eval.py --mode manual --name test --positions 2 --out /tmp/eval_test.csv
+python experiments/tools/eval.py --summary experiments/results/<name>.csv
 ```
 
 ## Validation

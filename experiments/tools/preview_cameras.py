@@ -1,11 +1,11 @@
-"""Live preview of every camera in experiments/robot.json at the EXACT resolution the dataset will record.
+"""Live preview of every camera in experiments/tools/robot.json at the EXACT resolution the dataset will record.
 
 Why: `lerobot-find-cameras` grabs the sensor's full field of view (e.g. 1920x1080), which is NOT what gets
 recorded. Recording uses the width/height in robot.json (640x480), and on this webcam that is a 4:3 CROP of
 the 16:9 sensor. This tool shows the cropped view so you can frame the rig against what the policy will see.
 
-    python experiments/preview_cameras.py            # all cameras, one window each; press q to quit
-    python experiments/preview_cameras.py --save     # also write a frame per camera to outputs/preview/
+    python experiments/tools/preview_cameras.py            # all cameras, one window each; press q to quit
+    python experiments/tools/preview_cameras.py --save     # also write a frame per camera to outputs/preview/
 
 Run it in your own Terminal (needs macOS camera permission for that app).
 """

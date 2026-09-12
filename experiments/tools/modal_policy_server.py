@@ -13,10 +13,10 @@ pretrained_name_or_path, and the server loads that model on first request. So th
 for smolvla_base today and your own fine-tuned checkpoint after R4.
 
     # 1. start the server (prints the address to use; holds a GPU until it exits)
-    modal run experiments/modal_policy_server.py --minutes 30
+    modal run experiments/tools/modal_policy_server.py --minutes 30
 
     # 2. in a second terminal on the Mac, with the follower + both cameras plugged in:
-    python experiments/eval.py --mode async --name smolvla_zeroshot \
+    python experiments/tools/eval.py --mode async --name smolvla_zeroshot \
         --policy-type smolvla --policy lerobot/smolvla_base \
         --server <ADDRESS PRINTED IN STEP 1> --duration 10
 
@@ -42,7 +42,7 @@ import time
 
 import modal
 
-APP_NAME = "lerobot-policy-server"
+APP_NAME = "policy-server"
 HF_CACHE_DIR = "/root/.cache/huggingface"
 DEFAULT_GPU = "A10G"          # enough for SmolVLA. Use L40S/A100-80GB for pi0.5.
 SERVER_PORT = 8080
@@ -76,6 +76,37 @@ local_tokens = modal.Secret.from_dict(
 )
 
 
+# LeRobot's PolicyServer reloads the policy on EVERY SendPolicyInstructions, and eval.py opens a new connection per
+# trial. That is seconds for SmolVLA but 142 s for pi0.5 (14 GB from the Volume), i.e. 47 min of reloading over a
+# 20-trial pass. This wrapper keeps the loaded policy when the next client asks for the same one.
+CACHED_SERVER = r"""
+import pickle, sys, threading
+import lerobot.async_inference.policy_server as ps
+_orig = ps.PolicyServer.SendPolicyInstructions
+_lock = threading.Lock()  # one load at a time: a client retry during the 100-140 s load must not start a second one
+
+def _cached(self, request, context):
+    specs = pickle.loads(request.data)  # nosec: our own client
+    key = (specs.policy_type, specs.pretrained_name_or_path, specs.device, specs.actions_per_chunk, getattr(specs, "rename_map", None))
+    with _lock:
+        if getattr(self, "_loaded_key", None) == key and getattr(self, "policy", None) is not None:
+            self.lerobot_features = specs.lerobot_features
+            self.actions_per_chunk = specs.actions_per_chunk
+            for obj in (self.policy, self.preprocessor, self.postprocessor):  # every trial starts stateless
+                if hasattr(obj, "reset"):
+                    obj.reset()
+            self.logger.info(f"Policy already loaded ({specs.policy_type}); reusing it")
+            return ps.services_pb2.Empty()
+        out = _orig(self, request, context)
+        self._loaded_key = key
+        return out
+
+ps.PolicyServer.SendPolicyInstructions = _cached
+sys.argv = ["policy_server", *sys.argv[1:]]
+ps.serve()
+"""
+
+
 @app.function(
     image=image,
     gpu=DEFAULT_GPU,
@@ -87,6 +118,7 @@ local_tokens = modal.Secret.from_dict(
 )
 def serve(minutes: int = 30, fps: int = 30, inference_latency: float = 0.033) -> dict:
     """Hold a GPU and run the policy server for `minutes`, reachable over a raw TCP tunnel."""
+    outputs.reload()  # a checkpoint finished after this container started is invisible without it
     # unencrypted=True gives a raw TCP socket, which is what gRPC needs.
     with modal.forward(SERVER_PORT, unencrypted=True) as tunnel:
         host, port = tunnel.tcp_socket
@@ -95,13 +127,13 @@ def serve(minutes: int = 30, fps: int = 30, inference_latency: float = 0.033) ->
         print(f"  POLICY SERVER ADDRESS:  {address}", flush=True)
         print(f"  Shutting down in {minutes} min. Ctrl-C here stops it early and stops the billing.", flush=True)
         print("  On the Mac:", flush=True)
-        print(f"    python experiments/eval.py --mode async --name smolvla_zeroshot \\", flush=True)
+        print(f"    python experiments/tools/eval.py --mode async --name smolvla_zeroshot \\", flush=True)
         print(f"        --policy-type smolvla --policy lerobot/smolvla_base \\", flush=True)
         print(f"        --server {address} --duration 10", flush=True)
         print("=" * 72, flush=True)
 
         cmd = [
-            sys.executable, "-m", "lerobot.async_inference.policy_server",
+            sys.executable, "-c", CACHED_SERVER,  # lerobot's server, patched to load a policy once and reuse it
             "--host=0.0.0.0",
             f"--port={SERVER_PORT}",
             f"--fps={fps}",
@@ -130,13 +162,21 @@ def serve(minutes: int = 30, fps: int = 30, inference_latency: float = 0.033) ->
     return {"address": address, "minutes": minutes, "returncode": proc.returncode}
 
 
+RATES = {"A10G": 1.10, "L40S": 1.95, "A100-80GB": 2.50, "H100": 3.95}
+
+
 @app.local_entrypoint()
-def main(minutes: int = 30, fps: int = 30, dry_run: bool = False):
-    est = round(minutes / 60 * 1.10, 2)
-    print(f"Policy server on {DEFAULT_GPU} for {minutes} min. Estimated cost ~${est:.2f} "
-          f"(A10G ~$1.10/h, billed for the whole window whether or not the arm moves).")
+def main(minutes: int = 30, fps: int = 30, gpu: str = DEFAULT_GPU, dry_run: bool = False):
+    """--gpu L40S for pi0.5 (A10G is enough for SmolVLA)."""
+    gpu = gpu.upper()
+    if gpu not in RATES:
+        raise SystemExit(f"unknown GPU {gpu!r}; known: {', '.join(RATES)}")
+    est = minutes / 60 * (RATES[gpu] + 0.32)  # + CPU/RAM
+    print(f"Policy server on {gpu} for {minutes} min. Estimated cost ~${est:.2f} "
+          f"(${RATES[gpu]:.2f}/h + CPU/RAM, billed for the whole window whether or not the arm moves).")
     if dry_run:
         print("--dry-run: nothing started, $0 spent.")
         return
-    result = serve.remote(minutes=minutes, fps=fps)
+    fn = serve if gpu == DEFAULT_GPU else serve.with_options(gpu=gpu)
+    result = fn.remote(minutes=minutes, fps=fps)
     print(result)

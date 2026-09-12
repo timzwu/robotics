@@ -5,17 +5,17 @@ Loop: observe -> predict one action chunk on the Mac GPU (SmolVLA: ~0.8 s on an 
 while the Mac thinks; ACT's local rollout is open-loop in the same way (one 100-step chunk at a time), so the
 two evals are comparable. Use the async policy server for real-time deployment; this is the eval path.
 
-    python experiments/sync_rollout.py --policy experiments/checkpoints/smolvla_so101_blocks_n100_s0 \
+    python experiments/tools/sync_rollout.py --policy experiments/checkpoints/smolvla_so101_blocks_n100_s0 \
         --task "put the red block in the left bowl" --duration 30
 
 Remote variant (same loop, the chunk comes from a LeRobot policy server on Modal; for models too big for
 the Mac, e.g. pi0.5). No blending, no queue: one observation out, one chunk back, execute, repeat, so the
 protocol is identical to the local loop and the pause is network + GPU time instead of Mac time:
 
-    python experiments/sync_rollout.py --server r442.modal.host:12345 --policy-type pi05 \
+    python experiments/tools/sync_rollout.py --server r442.modal.host:12345 --policy-type pi05 \
         --policy /outputs/<job>/checkpoints/last/pretrained_model --task "..." --duration 30
 
-Ctrl-C stops and disables torque. Robot config (ports, cameras, clamp) comes from experiments/robot.json.
+Ctrl-C stops and disables torque. Robot config (ports, cameras, clamp) comes from experiments/tools/robot.json.
 """
 from __future__ import annotations
 
@@ -81,14 +81,14 @@ class RemoteChunkSource:
         obs = TimedObservation(timestamp=time.time(), timestep=self.t, observation=raw, must_go=True)
         self.t += self.chunk
         self.stub.SendObservations(send_bytes_in_chunks(self.pickle.dumps(obs), self.pb.Observation, silent=True))
-        deadline = time.time() + 60
+        deadline = time.time() + 180  # the first pi0.5 inference after a load can be slow
         while time.time() < deadline:
             resp = self.stub.GetActions(self.pb.Empty())
             if len(resp.data):
                 actions = self.pickle.loads(resp.data)  # nosec: our own server
                 return np.stack([a.get_action().float().cpu().numpy() for a in actions])[: self.chunk]
             time.sleep(0.02)
-        raise RuntimeError("policy server returned no chunk within 60 s")
+        raise RuntimeError("policy server returned no chunk within 180 s")
 
 
 def main() -> None:
@@ -129,6 +129,9 @@ def main() -> None:
         get_chunk = remote.get_chunk
     else:
         pol, pre, post = load_policy(args.policy, args.policy_type, args.device)
+        n_steps = getattr(pol.config, "n_action_steps", args.chunk)
+        if args.chunk > n_steps:
+            raise SystemExit(f"--chunk {args.chunk} exceeds the policy's n_action_steps {n_steps}; a second inference would run mid-chunk")
 
         def get_chunk(raw, state):
             obs = {"observation.state": torch.tensor(state)[None], "task": [args.task]}
@@ -148,8 +151,7 @@ def main() -> None:
         Path(args.record).parent.mkdir(parents=True, exist_ok=True)
         rec = cv2.VideoWriter(args.record, cv2.VideoWriter_fourcc(*"mp4v"), args.fps, (640 * len(cams), 480))
     try:
-        for _ in range(int(args.fps)):  # ~1 s of frames so the cameras' exposure settles
-            bot.get_observation()
+        time.sleep(1.0)  # let the cameras' exposure settle (their capture threads run on their own; reads never block)
         c = 0
         while moved < args.duration:
             raw = bot.get_observation()
@@ -161,16 +163,22 @@ def main() -> None:
             print(f"[sync] chunk {c}: think {time.time() - t0:.2f}s | range {np.round(rng, 0).tolist()}", flush=True)
             cur = state.copy()
             t_exec = time.time()
+            executed = 0
             for a in chunk:
+                t_step = time.time()
+                executed += 1
                 cur = cur + np.clip(a - cur, -clamp, clamp)
                 bot.send_action({f"{j}.pos": float(cur[i]) for i, j in enumerate(JOINTS)})
                 if rec is not None:
                     raw = bot.get_observation()
                     rec.write(np.hstack([cv2.cvtColor(np.ascontiguousarray(raw[k]), cv2.COLOR_RGB2BGR) for k in cams]))
-                else:
-                    time.sleep(1 / args.fps)
+                # Pace every step to 1/fps whether or not we record. (Until Sept 12 the record path skipped the sleep and
+                # the camera read returns at once, so recorded trials played each chunk at ~120 Hz, 4x the training speed.)
+                time.sleep(max(0.0, 1 / args.fps - (time.time() - t_step)))
                 if moved + (time.time() - t_exec) >= args.duration:
                     break
+            hz = executed / max(time.time() - t_exec, 1e-6)
+            print(f"[sync]   executed at {hz:.1f} Hz" + ("  (SLOW: below 29 Hz)" if hz < 29 else ""), flush=True)
             moved += time.time() - t_exec
             c += 1
         print(f"[sync] done: {moved:.1f}s of motion in {c} chunks", flush=True)

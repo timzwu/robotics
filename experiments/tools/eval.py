@@ -8,7 +8,7 @@ Modes (--mode):
   local   ACT on the Mac:      runs `lerobot-rollout --strategy.type=base --policy.path=<ckpt>`
   async   SmolVLA / pi0.5:     runs `python -m lerobot.async_inference.robot_client` against a policy
                                server (Modal, or local) for --duration seconds, then stops it
-  sync    SmolVLA / pi0.5 on the Mac: runs `experiments/sync_rollout.py` (predict a chunk, execute it,
+  sync    SmolVLA / pi0.5 on the Mac: runs `experiments/tools/sync_rollout.py` (predict a chunk, execute it,
                                repeat; ~0.8 s think pause per chunk). The eval path used for R3/R4.
   rtc     SmolVLA on the Mac with LeRobot's Real-Time Chunking backend (`lerobot-rollout --inference.type=rtc`):
                                continuous motion, next chunk inpainted to agree with the committed prefix.
@@ -16,13 +16,13 @@ Modes (--mode):
                                Use it to test the script without hardware.
 
 Examples:
-    python experiments/eval.py --mode manual --name test --positions 3 --out /tmp/eval_test.csv
-    python experiments/eval.py --mode local --name act_50 --policy experiments/checkpoints/act_so101_blocks_20000
-    python experiments/eval.py --mode async --name smolvla_50 --policy-type smolvla \
+    python experiments/tools/eval.py --mode manual --name test --positions 3 --out /tmp/eval_test.csv
+    python experiments/tools/eval.py --mode local --name act_50 --policy experiments/checkpoints/act_so101_blocks_20000
+    python experiments/tools/eval.py --mode async --name smolvla_50 --policy-type smolvla \
         --policy $HF_USER/smolvla_blocks_50 --server 127.0.0.1:8080
-    python experiments/eval.py --summary experiments/results/act_50.csv     # just recompute the summary
+    python experiments/tools/eval.py --summary experiments/results/act_50.csv     # just recompute the summary
 
-Robot config comes from experiments/robot.json (ports, arm ids, cameras for this rig).
+Robot config comes from experiments/tools/robot.json (ports, arm ids, cameras for this rig).
 Output: experiments/results/<name>.csv + a printed summary with a 95% Wilson interval and failure breakdown.
 """
 
@@ -43,7 +43,7 @@ from datetime import datetime
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-RESULTS_DIR = HERE / "results"
+RESULTS_DIR = HERE.parent / "results"  # experiments/results/<experiment>/<name>.csv
 ROBOT_JSON = HERE / "robot.json"
 
 FIELDS = [
@@ -117,7 +117,7 @@ def build_command(args, task: str, position: int = 0) -> list[str] | None:
         f"--robot.type={robot.get('robot_type', 'so101_follower')}",
         f"--robot.port={robot['port']}",
         f"--robot.id={robot['id']}",
-        f"--robot.cameras={cameras_arg(rename_cameras(robot['cameras'], args.camera_rename))}",
+        f"--robot.cameras={cameras_arg(rename_cameras(robot['cameras'], '' if args.mode == 'rtc' else args.camera_rename))}",
     ]
     # Safety clamp: max degrees the follower may move per control step. Keeps a bad policy from
     # lunging into the table on a first zero-shot run. Omitted entirely when absent/null.
@@ -144,7 +144,7 @@ def build_command(args, task: str, position: int = 0) -> list[str] | None:
             f"--inference.rtc.execution_horizon={args.rtc_horizon}",
             f"--inference.rtc.max_guidance_weight={args.rtc_guidance}", *common,
             f"--task={task}", f"--duration={args.duration}",
-        ]
+        ] + ([f"--rename_map={json.dumps({f'observation.images.{a}': f'observation.images.{b}' for a, b in (p.split('=') for p in args.camera_rename.split(','))})}"] if args.camera_rename else [])
     if args.mode == "sync":
         if not (args.policy and args.policy_type):
             sys.exit("--policy and --policy-type are required for --mode sync")
@@ -189,7 +189,7 @@ def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None =
     if start_marker is None:
         proc = subprocess.Popen(cmd)
         try:
-            proc.wait(timeout=duration + 60)  # rollout stops itself at --duration; +60 s for model load and think pauses
+            proc.wait(timeout=duration + 300)  # rollout stops itself at --duration; +300 s covers a pi0.5 server load (~100-140 s) and think pauses
         except subprocess.TimeoutExpired:
             proc.send_signal(signal.SIGINT)
             try:
@@ -200,6 +200,9 @@ def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None =
             proc.send_signal(signal.SIGINT)
             proc.wait(timeout=10)
             raise
+        if proc.returncode != 0:
+            print(f"\n  *** ROLLOUT ABORTED (rc={proc.returncode}): this trial did NOT get its full motion budget. "
+                  f"Mark it a failure and add 'rc' to the notes, or re-run it. ***", flush=True)
         return time.time() - t0
 
     # Async client: the clock starts only when the control loop starts (after the server has loaded the
@@ -325,7 +328,7 @@ def main() -> None:
     ap.add_argument("--combos", default="", help='restrict tasks, e.g. "red:left,blue:right" for a policy '
                     "that was only trained on those (default: cycle all four)")
     ap.add_argument("--duration", type=float, default=30.0, help="seconds per trial")
-    ap.add_argument("--out", default="", help="CSV path (default experiments/results/<name>.csv)")
+    ap.add_argument("--out", default="", help="CSV path (default: an existing experiments/results/**/<name>.csv to resume, else experiments/results/<name>.csv; pass the experiment folder explicitly for new passes)")
     ap.add_argument("--summary", metavar="CSV", help="print the summary for an existing CSV and exit")
     args = ap.parse_args()
 
@@ -336,7 +339,8 @@ def main() -> None:
         ap.error("--name is required")
 
     combos = parse_combos(args.combos)
-    out = Path(args.out) if args.out else RESULTS_DIR / f"{args.name}.csv"
+    existing = sorted(RESULTS_DIR.glob(f"*/{args.name}.csv")) + sorted(RESULTS_DIR.glob(f"{args.name}.csv"))
+    out = Path(args.out) if args.out else (existing[0] if existing else RESULTS_DIR / f"{args.name}.csv")
     done = done_positions(out)
     todo = [p for p in range(1, args.positions + 1) if p not in done]
     print(f"[eval] {args.name}: {len(done)} done, {len(todo)} to go -> {out}")
