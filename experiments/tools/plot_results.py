@@ -25,25 +25,25 @@ STAGE = {"no_reach": 0, "no_move": 0, "touch_no_grip": 1, "timeout": 1, "drop": 
 # Trials whose notes place them in a different stage than their failure bucket (read the CSV notes before adding one).
 STAGE_OVERRIDES = {("smolvla_wristonly_pair", 3): 2}  # "grasps at last chunk" then timed out
 STAGE_COLORS = ["#e8e8e3", "#c6d4ea", "#7fa3d6", "#2b57a5"]
-STAGE_NAMES = ["never reached", "reached, no grip", "grasped, lost it", "success"]
+STAGE_NAMES = ["no contact with block", "contact without grip", "grip without successful placement", "success"]
 
 # (csv name, label) in display order. All are the same 20 stickers on the trained pair unless the label says otherwise.
 RUNS = [
-    ("act100k_pair", "ACT, 100 ep, 15 passes"),
-    ("smolvla_n10_pair", "SmolVLA, 10 ep"),
-    ("smolvla_n25_pair", "SmolVLA, 25 ep"),
-    ("smolvla_n50_pair", "SmolVLA, 50 ep"),
-    ("smolvla100_pair", "SmolVLA, 100 ep, 24 passes"),
-    ("smolvla_toponly_pair", "SmolVLA, 100 ep, overhead only"),
-    ("smolvla_wristonly_pair", "SmolVLA, 100 ep, wrist only"),
-    ("pi05full_pair", "π0.5, 100 ep, 18 passes"),
+    ("act100k_pair", "ACT, 100 demos, 15 passes"),
+    ("smolvla_n10_pair", "SmolVLA, 10 demos"),
+    ("smolvla_n25_pair", "SmolVLA, 25 demos"),
+    ("smolvla_n50_pair", "SmolVLA, 50 demos"),
+    ("smolvla100_pair", "SmolVLA, 100 demos, 24 passes"),
+    ("smolvla_toponly_pair", "SmolVLA, 100 demos, overhead only"),
+    ("smolvla_wristonly_pair", "SmolVLA, 100 demos, wrist only"),
+    ("pi05full_pair", "π0.5, 100 demos, 18 passes"),
     ("astra_pair", "GPT-6 Astra"),
 ]
 MATCHED = [  # the model comparison at each library's own recipe (ACT 15, SmolVLA 24, π0.5 18 passes), same 100 episodes
     ("act100k_pair", "ACT"),
     ("smolvla100_pair", "SmolVLA"),
     ("pi05full_pair", "π0.5"),
-    ("astra_pair", "GPT-6 Astra\n(no fine tuning)"),
+    ("astra_pair", "GPT-6 Astra, run 2\n(no task-specific fine-tuning)"),
 ]
 
 
@@ -82,7 +82,6 @@ def progress_chart(out: Path) -> None:
             share = st.count(s) / len(st)
             ax.barh(i, share, left=left, color=STAGE_COLORS[s], edgecolor=BG, height=0.6)
             left += share
-        ax.text(1.02, i, f"mean progress {sum(st) / len(st):.2f} / 3", va="center", fontsize=11)
     ax.set_yticks(range(len(runs)), [l for _, l in runs], fontsize=12)
     for lab, (name, _) in zip(ax.get_yticklabels(), runs):
         if name in HEADLINE:
@@ -141,10 +140,10 @@ def scaling_chart(out: Path) -> None:
     ax.fill_between(xs, los, his, color="#2b57a5", alpha=0.12, label="95% Wilson interval (n=20)", zorder=1)
     ax.plot(xs, ps, "-o", color="#2b57a5", lw=2.2, ms=8, label="SmolVLA, measured", zorder=3)
     gx = [n for _, n, g in SWEEP if g is not None]; gy = [g / 20 for _, _, g in SWEEP if g is not None]
-    ax.scatter(gx, gy, s=140, facecolors="none", edgecolors="#888", linewidths=2, label="blind prediction", zorder=4)
+    ax.scatter(gx, gy, s=140, facecolors="none", edgecolors="#888", linewidths=2, label="prediction before evaluation", zorder=4)
     for x, p, k in zip(xs, ps, ks):
         ax.annotate(f"{k}/20", (x, p), textcoords="offset points", xytext=(0, 10), ha="center", fontsize=12)
-    ax.set_xscale("log"); ax.set_xticks(xs, [f"{n}\n({n // 2} per task)" for n in xs], fontsize=12); ax.minorticks_off()
+    ax.set_xscale("log"); ax.set_xticks(xs, [f"{n}\n(12 / 13 across tasks)" if n == 25 else f"{n}\n({n // 2} per task)" for n in xs], fontsize=12); ax.minorticks_off()
     ax.set_ylim(0, 1); ax.set_yticks([0, 0.25, 0.5, 0.75, 1], ["0%", "25%", "50%", "75%", "100%"], fontsize=11)
     ax.set_xlabel("demonstrations", fontsize=13); ax.set_ylabel("success rate", fontsize=12)
     ax.grid(axis="y", color="#ddd", zorder=0)
