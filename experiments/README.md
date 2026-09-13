@@ -28,22 +28,11 @@ so results are reported with intervals, not point estimates.
 | `results/03_instruction_following/` | the pair-trained models on all four instruction combinations |
 | `results/04_camera_ablation/` | overhead-only / wrist-only / both cameras: `ablation_cameras.md` |
 | `results/05_execution_method/` | stop-and-go vs Real-Time Chunking on one checkpoint: `smolvla100_rtc.md` |
-| `results/06_general_llm/` | a general language model driving the arm through gripper poses (GPT-6 Astra); in progress |
+| `results/06_general_llm/` | a general language model driving the arm through gripper poses (GPT-6 Astra): pass 1 (no roll) 12/20, pass 2 (roll + joint tool + hint) 17/20 |
 | `results/trials/` | per-trial videos (gitignored, regenerate with the eval's `--record-dir`) |
 | `checkpoints/` | pulled model checkpoints (gitignored) |
 
 Scripts find a result CSV by name in any experiment folder; pass `--out experiments/results/<experiment>/<name>.csv` when starting a new pass.
-
-## Files
-
-| File | What | Runs where |
-|---|---|---|
-| `modal_hello.py` | Prove Modal auth, billing, and GPU work | Modal |
-| `modal_train.py` | `lerobot-train` on Modal (ACT / SmolVLA / pi0.5); checkpoints on a Volume | Modal |
-| `sweep.py` | Data-scaling sweep: nested seeded episode subsets trained in parallel | Modal |
-| `eval.py` | 20-position eval protocol -> `results/<name>.csv` + summary with 95% Wilson CI | Mac |
-| `robot.json` | Ports, arm ids, cameras for this rig | Mac |
-| `results/` | CSVs, comparison tables, plots | - |
 
 ## Dry run on public data
 
@@ -72,14 +61,14 @@ modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so1
 modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy smolvla --steps 20000 --batch-size 64 --gpu L40S --yes
 modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50,100 --steps 20000 --batch-size 64 --gpu L40S --yes
 
-# eval: ACT locally; VLAs through async inference (policy server on a GPU, Mac as client)
+# eval: ACT locally; VLAs through the stop-and-go client (policy server on a GPU, Mac as client)
 python experiments/tools/eval.py --mode local --name act_50 --policy experiments/checkpoints/<job>
-python experiments/tools/eval.py --mode async --name smolvla_50 --policy-type smolvla --policy <hub-id> --server <host:port>
-python experiments/tools/eval.py --summary experiments/results/act_50.csv
+python experiments/tools/eval.py --mode sync --name smolvla_50 --policy-type smolvla --policy <volume-path> --server <host:port>
+python experiments/tools/eval.py --summary experiments/results/01_model_comparison/act_50.csv
 ```
 
 Notes
 - Modal Volumes: `lerobot-hf-cache` (datasets, base models), `lerobot-outputs` (checkpoints). `modal volume ls lerobot-outputs`.
 - `HF_TOKEN` is also needed for gated models (pi0.5 uses the PaliGemma tokenizer; accept its license on the Hub).
-- Camera ablation: decide the mechanism (`--rename_map` / `--policy.empty_cameras` / a dataset copy without the wrist key) once the real camera keys exist.
+- Camera ablation was done with dataset copies that omit one camera stream (see `results/04_camera_ablation/`).
 - `results/` is committed; `checkpoints/` is not.

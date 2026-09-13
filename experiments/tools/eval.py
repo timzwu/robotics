@@ -164,6 +164,22 @@ def build_command(args, task: str, position: int = 0) -> list[str] | None:
         if args.record_dir:
             cmd.append(f"--record={Path(args.record_dir) / f'{args.name}_{position:02d}.mp4'}")
         return cmd
+    if args.mode == "llm":
+        # A general language model plans gripper poses from the camera frames (no demonstrations); see llm_rollout.py.
+        if args.clamp is not None and args.clamp <= 0:
+            sys.exit("--clamp must be > 0 in --mode llm (it is the speed bound)")
+        # llm_rollout defaults to clamp 3 (slower than the other passes' 5); --clamp overrides
+        cmd = [sys.executable, str(HERE / "llm_rollout.py"), f"--task={task}", f"--duration={args.duration}",
+               f"--robot-config={ROBOT_JSON}", f"--model={args.llm_model}", f"--max-calls={args.llm_calls}",
+               f"--effort={args.llm_effort}", f"--prompt={args.llm_prompt}", f"--z-grasp={args.z_grasp}", f"--grasp={args.grasp}"]
+        if args.clamp is not None:
+            cmd.append(f"--clamp={args.clamp}")
+        if args.record_dir:
+            cmd.append(f"--record={Path(args.record_dir) / f'{args.name}_{position:02d}.mp4'}")
+            cmd.append(f"--frames-dir={Path(args.record_dir) / 'frames' / f'{args.name}_{position:02d}'}")
+        if args.out:
+            cmd.append(f"--log={Path(args.out).with_suffix('.calls.jsonl')}")
+        return cmd
     if args.mode == "async":
         if not (args.policy and args.policy_type):
             sys.exit("--policy and --policy-type are required for --mode async")
@@ -179,12 +195,12 @@ def build_command(args, task: str, position: int = 0) -> list[str] | None:
     sys.exit(f"unknown mode {args.mode}")
 
 
-def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None = None) -> float:
+def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None = None) -> tuple[float, int]:
     """Run the policy command for up to `duration` seconds. Returns wall time actually used."""
     t0 = time.time()
     if cmd is None:
         input(f"  Run the policy now (~{duration:.0f}s). Press Enter when the trial is over... ")
-        return time.time() - t0
+        return time.time() - t0, 0
     print("  $", " ".join(shlex.quote(c) for c in cmd))
     if start_marker is None:
         proc = subprocess.Popen(cmd)
@@ -200,10 +216,7 @@ def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None =
             proc.send_signal(signal.SIGINT)
             proc.wait(timeout=10)
             raise
-        if proc.returncode != 0:
-            print(f"\n  *** ROLLOUT ABORTED (rc={proc.returncode}): this trial did NOT get its full motion budget. "
-                  f"Mark it a failure and add 'rc' to the notes, or re-run it. ***", flush=True)
-        return time.time() - t0
+        return time.time() - t0, int(proc.returncode or 0)
 
     # Async client: the clock starts only when the control loop starts (after the server has loaded the
     # model, which can take 20-30 s on the first trial), so every trial gets the full `duration` of motion.
@@ -308,7 +321,13 @@ def summarize(path: Path) -> None:
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--name", help="condition name, e.g. act_50 (used for the CSV filename)")
-    ap.add_argument("--mode", choices=["local", "async", "sync", "rtc", "manual"], default="manual")
+    ap.add_argument("--mode", choices=["local", "async", "sync", "rtc", "llm", "manual"], default="manual")
+    ap.add_argument("--llm-model", default="gpt-6-astra", help="llm only: model id")
+    ap.add_argument("--llm-calls", type=int, default=0, help="llm only: model calls per trial, 0 = unlimited (the 30 s of motion is the only limit)")
+    ap.add_argument("--llm-effort", default="medium", help="llm only: reasoning effort")
+    ap.add_argument("--llm-prompt", default="plain", choices=["plain", "coached"], help="llm only: plain = interface + physics only (fair); coached = adds bowl coordinates and a grasp recipe")
+    ap.add_argument("--z-grasp", type=float, default=0.01, help="llm only (coached prompt): fingertip height at a grasp (demos: 0.001-0.017)")
+    ap.add_argument("--grasp", type=float, default=3.0, help="llm only (coached prompt): gripper command that holds the block")
     ap.add_argument("--policy", default="", help="checkpoint dir / Hub id (local), or Hub id on the server (async)")
     ap.add_argument("--policy-type", default="", help="async only: act | smolvla | pi05")
     ap.add_argument("--policy-device", default="cuda", help="async only: device on the policy server")
@@ -354,13 +373,20 @@ def main() -> None:
             task = task_for(color, bowl)
             print(f"\n=== Position {pos}/{args.positions}: {color.upper()} block on dot {pos}, target {bowl.upper()} bowl")
             input("  Place the block, clear the mat, then press Enter to start... ")
-            cmd = build_command(args, task, pos)
-            used = run_trial(cmd, args.duration, start_marker="Control loop thread starting" if args.mode == "async" else None)
+            while True:
+                cmd = build_command(args, task, pos)
+                used, rc = run_trial(cmd, args.duration + (max(args.llm_calls, 40) * 90 if args.mode == "llm" else 0), start_marker="Control loop thread starting" if args.mode == "async" else None)
+                if rc == 0:
+                    break
+                print(f"\n  *** ROLLOUT ABORTED (rc={rc}): this trial did NOT get its full motion budget. ***", flush=True)
+                if not input("  [r]e-run this position now, or [l]og it as a failure? ").strip().lower().startswith("r"):
+                    break
+                input("  Reset the block on the dot, then press Enter to re-run... ")
             success, ftype, notes = ask_outcome()
             append_row(out, {
                 "name": args.name, "position": pos, "color": color, "bowl": bowl, "task": task,
                 "success": success, "failure_type": ftype, "duration_s": f"{used:.1f}", "notes": notes,
-                "timestamp": datetime.now().isoformat(timespec="seconds"), "policy": args.policy,
+                "timestamp": datetime.now().isoformat(timespec="seconds"), "policy": args.llm_model if args.mode == "llm" else args.policy,
                 "mode": args.mode,
             })
     except KeyboardInterrupt:

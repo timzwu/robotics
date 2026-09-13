@@ -38,12 +38,15 @@ RUNS = [
     ("smolvla_toponly_pair", "SmolVLA, 100 ep, overhead only"),
     ("smolvla_wristonly_pair", "SmolVLA, 100 ep, wrist only"),
     ("pi05_pair", "π0.5, 100 ep, 24 passes"),
+    ("astra_pair_noroll", "GPT-6 Astra, pass 1: no wrist roll"),
+    ("astra_pair", "GPT-6 Astra, pass 2: roll + joint tool + hint"),
 ]
 MATCHED = [  # the model comparison at each library's default recipe / matched passes, same 100 episodes
     ("act100_pair", "ACT\n3 passes"),
     ("act100k_pair", "ACT\n15 passes"),
     ("smolvla100_pair", "SmolVLA\n24 passes"),
     ("pi05_pair", "π0.5\n24 passes"),
+    ("astra_pair", "GPT-6 Astra\nno demonstrations, roll + hint"),
 ]
 
 
@@ -51,7 +54,7 @@ def load(name: str) -> list[dict]:
     """Find <name>.csv in any experiment folder under results/."""
     hits = sorted(RES.glob(f"*/{name}.csv")) + sorted(RES.glob(f"{name}.csv"))
     if not hits:
-        raise SystemExit(f"no {name}.csv under {RES}")
+        return []
     return list(csv.DictReader(open(hits[0])))
 
 
@@ -68,9 +71,11 @@ def wilson(k: int, n: int, z: float = 1.96) -> tuple[float, float]:
 
 
 def progress_chart(out: Path) -> None:
-    fig, ax = plt.subplots(figsize=(14.3, 0.66 * len(RUNS) + 2.2), facecolor=BG)
+    runs = [(n, l) for n, l in RUNS if load(n)]
+    fig, ax = plt.subplots(figsize=(14.3, 0.66 * len(runs) + 2.2), facecolor=BG)
     ax.set_facecolor(BG)
-    for i, (name, label) in enumerate(RUNS):
+    runs = [(n, l) for n, l in RUNS if load(n)]
+    for i, (name, label) in enumerate(runs):
         st = stages(load(name))
         left = 0.0
         for s in range(4):
@@ -78,7 +83,7 @@ def progress_chart(out: Path) -> None:
             ax.barh(i, share, left=left, color=STAGE_COLORS[s], edgecolor=BG, height=0.6)
             left += share
         ax.text(1.02, i, f"mean progress {sum(st) / len(st):.2f} / 3", va="center", fontsize=11)
-    ax.set_yticks(range(len(RUNS)), [l for _, l in RUNS], fontsize=12)
+    ax.set_yticks(range(len(runs)), [l for _, l in runs], fontsize=12)
     ax.invert_yaxis()
     ax.set_xlim(0, 1)
     ax.set_xticks([0, 0.25, 0.5, 0.75, 1], ["0%", "25%", "50%", "75%", "100%"], fontsize=12)
@@ -97,28 +102,29 @@ def progress_chart(out: Path) -> None:
 
 
 def comparison_chart(out: Path) -> None:
-    fig, ax = plt.subplots(figsize=(8.5, 5), facecolor=BG)
+    fig, ax = plt.subplots(figsize=(10, 5), facecolor=BG)
     ax.set_facecolor(BG)
-    xs = np.arange(len(MATCHED))
-    for x, (name, label) in zip(xs, MATCHED):
+    matched = [(n, l) for n, l in MATCHED if load(n)]
+    xs = np.arange(len(matched))
+    for x, (name, label) in zip(xs, matched):
         rows = load(name)
         k = sum(r["success"] == "1" for r in rows)
         lo, hi = wilson(k, len(rows))
         p = k / len(rows)
-        ax.bar(x, p, width=0.6, color="#2b57a5" if "π0.5" not in label else "#7fa3d6", zorder=2)
+        ax.bar(x, p, width=0.6, color="#b3672b" if "Astra" in label else "#2b57a5", zorder=2)
         ax.errorbar(x, p, yerr=[[p - lo], [hi - p]], fmt="none", ecolor="#333", elinewidth=1.4, capsize=6, zorder=3)
         ax.text(x, hi + 0.03, f"{k}/20", ha="center", fontsize=12, fontweight="bold")
-    ax.set_xticks(xs, [l for _, l in MATCHED], fontsize=12)
+    ax.set_xticks(xs, [l for _, l in matched], fontsize=12)
     ax.set_ylim(0, 1)
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1], ["0%", "25%", "50%", "75%", "100%"], fontsize=11)
     ax.set_ylabel("success on the trained pair (20 trials)", fontsize=12)
     ax.grid(axis="y", color="#ddd", zorder=0)
     for side in ("top", "right"):
         ax.spines[side].set_visible(False)
-    ax.set_title("Same 100 demonstrations, same 20 trials: three model families", fontsize=14, pad=12)
-    fig.text(0.01, 0.01, "Bars: successes out of 20; whiskers: 95% Wilson interval. ACT from scratch; SmolVLA and π0.5 fine-tuned\n"
-             "(vision frozen, action expert trained) at 24 passes over the data.", fontsize=9, color="#555")
-    fig.tight_layout(rect=(0, 0.08, 1, 1))
+    ax.set_title("Same task, same 20 trials: three trained model families and one language model", fontsize=14, pad=12)
+    fig.text(0.01, 0.01, "Bars: successes out of 20; whiskers: 95% Wilson interval. ACT from scratch; SmolVLA and π0.5 fine-tuned on the same 100 demonstrations\n"
+             "(vision-language model frozen, action expert trained) at 24 passes.\nGPT-6 Astra saw no demonstrations: it commands gripper poses from the camera frames (pass 2: wrist roll + joint tool + one prompt hint).", fontsize=9, color="#555")
+    fig.tight_layout(rect=(0, 0.11, 1, 1))
     fig.savefig(out, dpi=110, facecolor=BG)
     plt.close(fig)
 
@@ -129,7 +135,7 @@ def geography(panels: list[tuple[str, str, bool]], out: Path, caption: str, sigm
     xs, ys = np.array([v[0] for v in px.values()]), np.array([v[1] for v in px.values()])
     x0, x1, y0, y1 = xs.min() - 40, xs.max() + 40, ys.min() - 40, ys.max() + 40
     gx, gy = np.meshgrid(np.linspace(x0, x1, 120), np.linspace(y0, y1, 120))
-    fig, axes = plt.subplots(1, len(panels), figsize=(6.3 * len(panels) + 1.2, 7), facecolor=BG)
+    fig, axes = plt.subplots(1, len(panels), figsize=(5.6 * len(panels) + 1.2, 6.6), facecolor=BG)
     axes = np.atleast_1d(axes)
     for ax, (name, title, star) in zip(axes, panels):
         rows = load(name)
@@ -182,4 +188,12 @@ if __name__ == "__main__":
         "π0.5 vs SmolVLA on the same 100 episodes at matched passes; smoothed between stickers (Gaussian, σ≈42 px). Odd stickers "
         "red→left, even blue→right in the pair passes; squares = untrained combos in the four-task pass. Left/right from the operator seat.",
     )
-    print("wrote progress_by_model.png, model_comparison.png, failure_geography_pi05.png")
+    if load("astra_pair"):
+      geography(
+        [("smolvla100_pair", "SmolVLA, 100 demos", False), ("pi05_pair", "π0.5, 100 demos", False),
+         ("astra_pair_noroll", "GPT-6 Astra, no demos, no roll", False), ("astra_pair", "GPT-6 Astra, no demos, with roll", False)],
+        RES / "06_general_llm" / "failure_geography_llm.png",
+        "Same 20 stickers, red→left on odd stickers and blue→right on even. GPT-6 Astra drives the arm through gripper poses, given no demonstrations "
+        "(pass 1 without a wrist-roll parameter, pass 2 with roll, a joint tool and one prompt hint); the trained models react at 30 Hz. Smoothed between stickers (Gaussian, σ≈42 px).",
+    )
+    print("wrote progress_by_model.png, model_comparison.png, failure_geography_pi05.png, 06_general_llm/failure_geography_llm.png")

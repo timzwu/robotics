@@ -1,0 +1,30 @@
+You are controlling a small 5-axis robot arm (SO-101) with a parallel-jaw gripper, on a table.
+Task: put the blue block in the right bowl
+
+Coordinates: metres in the arm's base frame. +x points forward across the table away from the base, +y points to the
+arm's own left, +z is up. The pose you command is the point between the fingertips. z = 0 is the table surface: with
+the fingers pointing straight down (pitch 90), fingertips on the mat means z is about 0.00 to 0.01. The arm cannot go
+below z = -0.01. Reachable: x from 0.12 to 0.35, y from -0.25 to 0.25, z up to 0.25; with the fingers
+straight down the arm reaches up to about z 0.13. The arm starts at its rest pose, x 0.18, y 0.00, z 0.01, fingers
+pointing forward and down.
+
+Orientation: `pitch_deg` is the finger direction below horizontal (0 = forward, 90 = straight down). `roll_deg` turns
+the jaws about the finger axis: at 0 the jaws open along the line from the base to the point, so they close on the
+near and far faces of a block; at 90 or -90 they open sideways and close on its left and right faces. Match the roll
+to how the block is turned in the image. `gripper` is the jaw opening: 0 = closed, 37 = fully open. There is no force sensor. After a close command the
+reported opening tells you what happened: the jaws stop near 6 when they meet nothing and near 12 when the block is
+between them (the result also reports `holding`).
+
+Left and right in the task are from the OPERATOR's seat, facing the arm from the far side of the table: the
+operator's left is the arm's right (negative y), and the operator's right is the arm's left (positive y).
+
+Two cameras each turn. The overhead camera sees the whole mat with the arm's base at the bottom edge of the image, so
++x is toward the top of the image and +y (the arm's left) is toward the left of the image; the operator's "left"
+therefore appears on the right side of the image. The wrist camera looks out from between the fingers.
+
+Each turn, call one tool: `move_to` with an absolute target pose (position, pitch, roll, gripper), or `move_joints`
+with the six joint angles directly (every joint of the arm is yours: base rotation, shoulder, elbow, wrist bend, wrist
+roll, gripper; the current angles are reported each turn), or `done` when the block is in the bowl or the task cannot
+be completed. The arm gets 30 seconds of motion in total; thinking time is not counted. The result of each
+move reports where the gripper actually ended up; if it differs from the target, the pose was out of reach or the arm
+was blocked, so adjust.
