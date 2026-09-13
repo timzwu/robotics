@@ -22,10 +22,10 @@ so results are reported with intervals, not point estimates.
 | path | what |
 |---|---|
 | `tools/` | every script: Modal trainer and sweep, policy server, eval protocol, stop-and-go rollout, plots, video cuts, camera preview, `robot.json` |
-| `results/` | cross-cutting files: `training_runs.md` (every training run), `all_trials_wk1.csv` (every eval trial), `sticker_map.json`, the teleop video |
+| `results/` | cross-cutting files: `training_runs.md` (every training run), `training_loss.csv`, `all_trials_wk1.csv` (every eval trial), `sticker_map.json`, `rig-2026-09-07.jpg`, the teleop reel (the final reels are tracked; raw trial footage under `trials/` is not) |
 | `results/01_model_comparison/` | ACT vs SmolVLA vs π0.5 on the trained pair: `comparison_wk1.md` (the write-up), per-pass CSVs, model / progress / geography plots |
 | `results/02_data_scaling/` | SmolVLA at 10 / 25 / 50 / 100 episodes: `scaling_predictions.md`, sweep CSVs and manifest, `scaling.png` |
-| `results/03_instruction_following/` | the pair-trained models on all four instruction combinations |
+| `results/03_instruction_following/` | the pair-trained models on all four instruction combinations: `smolvla100_all4.md`, `smolvla100_all4.csv`, `pi05full_all4.csv` (+ reel), `pi05_all4.csv` (frozen-backbone control) |
 | `results/04_camera_ablation/` | overhead-only / wrist-only / both cameras: `ablation_cameras.md` |
 | `results/05_execution_method/` | stop-and-go vs Real-Time Chunking on one checkpoint: `smolvla100_rtc.md` |
 | `results/06_general_llm/` | a general language model driving the arm through gripper poses (GPT-6 Astra): pass 1 (no roll) 12/20, pass 2 (roll + joint tool + hint) 17/20 |

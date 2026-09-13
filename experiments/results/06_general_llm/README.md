@@ -1,6 +1,6 @@
 # 06 · A general language model driving the arm (GPT-6 Astra)
 
-**Results (2026-09-13): pass 1 (no roll) 12/20; pass 2 (roll + joint tool + one hint) 17/20.** Write-up `astra.md`; per-call log `astra_pair.calls.jsonl`; prompt `prompt_plain.txt`; map `failure_geography_llm.png`; reel `astra_pair_10x.mp4`; justification feed video `astra_pair_feed_highlights_6x.mp4` (five successes, made with `tools/make_llm_feed_video.py`); pass 1 record `astra_pass1_recovered.md` + `astra_pair_noroll.csv`.
+**Results (2026-09-13): pass 1 (no roll) 12/20; pass 2 (roll + joint tool + one hint) 17/20.** Write-up `astra.md`; per-call log `astra_pair.calls.jsonl`; prompt `prompt_plain.txt`; map `failure_geography_llm.png`; reel `astra_pair_10x_with_thinking.mp4` and justification feed `astra_pair_feed_highlights_10x_true_time.mp4` (both including inference pauses; motion-only versions kept alongside); pass 1 record `astra_pass1_recovered.md` + `astra_pair_noroll.csv`.
 
 **Pass 1 (Sept 12 evening, no wrist roll in the interface): 12/20**, blue→right 8/10, red→left 4/10, all 8 failures touch_no_grip; the
 model reached the block on every trial and called done every time (median 18 calls, 127 s of thinking, 22 s of motion, ~210k input

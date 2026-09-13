@@ -331,19 +331,22 @@ def build_argv(
         argv.append(f"--policy.path={pretrained}" if pretrained else "--policy.type=diffusion")
     elif policy == "smolvla":
         argv.append(f"--policy.path={pretrained or 'lerobot/smolvla_base'}")
-    elif policy == "pi05":
-        # Freeze the PaliGemma backbone, train the action expert only (fits on one GPU).
+    elif policy in ("pi05", "pi05full"):
+        # pi05: freeze the PaliGemma backbone, train the action expert only (SmolVLA's recipe; fits on one GPU).
+        # pi05full: PI's own recipe, the whole model trains (LeRobot's defaults: nothing frozen); needs an 80 GB card.
         argv += [
             "--policy.type=pi05",
             f"--policy.pretrained_path={pretrained or 'lerobot/pi05_base'}",
-            "--policy.freeze_vision_encoder=true",
-            "--policy.train_expert_only=true",
+        ]
+        if policy == "pi05":
+            argv += ["--policy.freeze_vision_encoder=true", "--policy.train_expert_only=true"]
+        argv += [
             "--policy.gradient_checkpointing=true",
             "--policy.dtype=bfloat16",
             "--policy.normalization_mapping={\"ACTION\": \"MEAN_STD\", \"STATE\": \"MEAN_STD\", \"VISUAL\": \"IDENTITY\"}",
         ]
     else:
-        raise SystemExit(f"unknown policy {policy!r}; use act | diffusion | smolvla | pi05")
+        raise SystemExit(f"unknown policy {policy!r}; use act | diffusion | smolvla | pi05 | pi05full")
 
     if extra:
         tokens = shlex.split(extra)  # keeps JSON values with spaces intact
@@ -437,10 +440,11 @@ MEASURED_SEC_PER_STEP = {
     ("smolvla", "L40S", 64): 0.58,   # sweep runs; the n100 run was 0.53
     ("pi05", "A100-80GB", 32): 3.07,
     ("pi05", "H100", 32): 1.19,
+    ("pi05full", "H100", 32): 1.55,  # unfrozen (PI recipe), fit trial Sept 13: ~1.55 s/step steady on one H100, fits in 80 GB with grad checkpointing
 }
 MULTI_CARD_SCALING = 0.88   # MEASURED Sept 12: pi0.5 on 2 x H100 ran 0.66 s/step vs 1.18 on one (1.77x); one H100 node, NVLink
 STARTUP_H = 0.1             # container start + dataset/model pull (pi0.5 cold cache was ~10 min)
-MAX_GPUS_PER_JOB = 4
+MAX_GPUS_PER_JOB = 8   # raised from 4 on Sept 13 (Tim) for the unfrozen pi0.5 run; one Modal node holds up to 8 H100s
 MAX_RUN_HOURS = 20.0        # Modal kills a call at 24 h; a run estimated past this is refused instead of launched
 CONFIRM_COST_USD = 40.0     # runs estimated above this need --confirm-cost (~4% of the credits)
 
@@ -458,7 +462,7 @@ def hours_for(steps: int, sec_per_step: float, gpus: int) -> float:
 def triage(gpus: int, global_batch: int, sec_per_step: float, steps: int) -> str:
     """Printed recommendation. Cost only goes UP with more cards; the decision is wall time and the 24 h cap."""
     h1 = hours_for(steps, sec_per_step, 1)
-    need = next((n for n in (1, 2, 4) if hours_for(steps, sec_per_step, n) <= MAX_RUN_HOURS), None)
+    need = next((n for n in (1, 2, 4, 8) if hours_for(steps, sec_per_step, n) <= MAX_RUN_HOURS), None)
     premium = f"+{100 * (1 / MULTI_CARD_SCALING - 1):.0f}%"
     if need is None:
         return f"no card count finishes under {MAX_RUN_HOURS:.0f} h; split the run (--steps then --resume-from) or use a faster GPU"
@@ -509,7 +513,7 @@ def estimate(policy: str, gpu: str, gpus: int, steps: int, global_batch: int, se
              f"+{100 * (1 / MULTI_CARD_SCALING - 1):.0f}% at {MULTI_CARD_SCALING} scaling)" if gpus > 1 else ""))
     print(f"[modal_train] {triage(gpus, global_batch, sec, steps)}")
     if hn > MAX_RUN_HOURS:
-        need = next((n for n in (2, 4) if hours_for(steps, sec, n) <= MAX_RUN_HOURS), None)
+        need = next((n for n in (2, 4, 8) if hours_for(steps, sec, n) <= MAX_RUN_HOURS), None)
         raise SystemExit(f"[modal_train] ~{hn:.1f} h exceeds {MAX_RUN_HOURS:.0f} h (Modal kills the call at 24 h; attempt 1 of pi0.5 died this way). "
                          + (f"Use --gpus {need}." if need else "Split the run: fewer --steps now, then --resume-from."))
     if cost > CONFIRM_COST_USD and not confirm_cost:
@@ -619,7 +623,10 @@ def main(
         cfg = _read_json(f"{job}/checkpoints/{step_dir}/pretrained_model/train_config.json") or {}
         saved_gpus, per_card, step = int(state.get("num_processes", 1)), int(state["batch_size"]), int(state["step"])
         total_steps = int(cfg.get("steps", 0))
-        pol = (cfg.get("policy") or {}).get("type", "?")
+        pc = cfg.get("policy") or {}
+        pol = pc.get("type", "?")
+        if pol == "pi05" and not pc.get("freeze_vision_encoder") and not pc.get("train_expert_only"):
+            pol = "pi05full"  # the saved config says pi05 either way; the measured speed differs (whole model training)
         remaining = total_steps - step
         if remaining <= 0:
             raise SystemExit(f"{job} already reached step {step} of {total_steps}; nothing to resume")

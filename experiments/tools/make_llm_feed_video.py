@@ -33,6 +33,7 @@ ap.add_argument("--trials", default="", help="comma list of positions to include
 ap.add_argument("--speed", type=float, default=6.0, help="motion playback, times real time")
 ap.add_argument("--hold", type=float, default=1.0, help="seconds to hold on each justification before its motion")
 ap.add_argument("--done-hold", type=float, default=2.0)
+ap.add_argument("--true-time", action="store_true", help="hold each call for its logged thinking time divided by --speed (true Nx throughout) instead of a fixed --hold")
 ap.add_argument("--fps", type=int, default=30)
 ap.add_argument("--out", default="")
 args = ap.parse_args()
@@ -101,7 +102,7 @@ def result_line(c):
     return f"got {pose_str(c.get('achieved'))}" + (f"   {' '.join(flags)}" if flags else ""), (GOOD if c.get("holding") else DIM)
 
 
-def render(cams, header, entries, current, phase, clocks, verdict=None):
+def render(cams, header, entries, current, phase, clocks, verdict=None, phase_t=None):
     """cams: 1280x480 BGR frame or None. entries: list of call dicts up to and including current."""
     img = Image.new("RGB", (W, H), BG)
     if cams is not None:
@@ -135,7 +136,7 @@ def render(cams, header, entries, current, phase, clocks, verdict=None):
         else:
             head = f"call {e['call']} · {e['tool']} · thought {e.get('think_s', 0):.1f} s"
             if is_cur:
-                head += "   ·   " + ("thinking done, about to move" if phase == "hold" else f"moving  {e.get('move_s', 0):.1f} s")
+                head += "   ·   " + ((f"thinking… {phase_t:.1f} s" if phase_t is not None else "thinking done, about to move") if phase == "hold" else f"moving  {e.get('move_s', 0):.1f} s")
             lines.append(("h", head, ACCENT if is_cur else DIM))
             for l in wrap(d, e.get("why", ""), F_BODY, PANEL_W):
                 lines.append(("b", l, INK if is_cur else (200, 198, 192)))
@@ -220,21 +221,30 @@ for idx, rec in enumerate(records, 1):
         entries.append(c)
         think_total += c.get("think_s", 0)
         clocks = f"motion {motion_total:4.1f} / 30 s · thinking {think_total:5.1f} s · calls {c['call']}"
+        if args.true_time:
+            clocks += f" · {args.speed:g}x speed including inference pauses"
         if "done" in c:
             verdict = ("✓ SUCCESS (judged by the operator)", GOOD) if ok else (f"✗ FAILURE: {row.get('failure_type', '')}", BAD)
-            emit(render(cur_frame, header, entries, c, "hold", clocks, (verdict[0], verdict[1], "Note: " + row.get("notes", ""))), args.done_hold)
+            emit(render(cur_frame, header, entries, c, "hold", clocks, (verdict[0], verdict[1], "Note: " + row.get("notes", ""))), max(args.done_hold, c.get("think_s", 0) / args.speed) if args.true_time else args.done_hold)
             break
-        emit(render(cur_frame, header, entries, c, "hold", clocks), args.hold)
+        if args.true_time:
+            th = c.get("think_s", 0)
+            nf = max(1, int(round(th / args.speed * args.fps)))
+            for q in range(nf):
+                writer.write(render(cur_frame, header, entries, c, "hold", clocks, phase_t=th * (q + 1) / nf))
+                n_out += 1
+        else:
+            emit(render(cur_frame, header, entries, c, "hold", clocks), args.hold)
         a, b = ranges[c["call"]]
         k = max(1, int(round(c.get("move_s", 0) * args.fps / args.speed))) if b > a else 0
         for step, j in enumerate(np.linspace(a, b - 1, k).round().astype(int) if k else []):
             fr = frames.get(int(j), cur_frame)
             cur_frame = fr
             t = motion_total + c.get("move_s", 0) * (step + 1) / k
-            writer.write(render(fr, header, entries, c, "move", f"motion {t:4.1f} / 30 s · thinking {think_total:5.1f} s · calls {c['call']}"))
+            writer.write(render(fr, header, entries, c, "move", f"motion {t:4.1f} / 30 s · thinking {think_total:5.1f} s · calls {c['call']}" + (f" · {args.speed:g}x speed including inference pauses" if args.true_time else "")))
             n_out += 1
         motion_total += c.get("move_s", 0)
-        emit(render(cur_frame, header, entries, c, "after", f"motion {motion_total:4.1f} / 30 s · thinking {think_total:5.1f} s · calls {c['call']}"), 0.35)
+        emit(render(cur_frame, header, entries, c, "after", f"motion {motion_total:4.1f} / 30 s · thinking {think_total:5.1f} s · calls {c['call']}" + (f" · {args.speed:g}x speed including inference pauses" if args.true_time else "")), 0.35)
     print(f"[feed] trial {idx}: {len(log)} calls, {n_frames} frames -> {n_out / args.fps:.0f} s so far", flush=True)
 
 writer.release()

@@ -23,7 +23,7 @@ Examples:
     python experiments/tools/eval.py --summary experiments/results/act_50.csv     # just recompute the summary
 
 Robot config comes from experiments/tools/robot.json (ports, arm ids, cameras for this rig).
-Output: experiments/results/<name>.csv + a printed summary with a 95% Wilson interval and failure breakdown.
+Output: experiments/results/<experiment>/<name>.csv + a printed summary with a 95% Wilson interval and failure breakdown.
 """
 
 from __future__ import annotations
@@ -347,7 +347,7 @@ def main() -> None:
     ap.add_argument("--combos", default="", help='restrict tasks, e.g. "red:left,blue:right" for a policy '
                     "that was only trained on those (default: cycle all four)")
     ap.add_argument("--duration", type=float, default=30.0, help="seconds per trial")
-    ap.add_argument("--out", default="", help="CSV path (default: an existing experiments/results/**/<name>.csv to resume, else experiments/results/<name>.csv; pass the experiment folder explicitly for new passes)")
+    ap.add_argument("--out", default="", help="CSV path (default: an existing experiments/results/**/<name>.csv to resume, else experiments/results/<experiment>/<name>.csv; pass the experiment folder explicitly for new passes)")
     ap.add_argument("--summary", metavar="CSV", help="print the summary for an existing CSV and exit")
     args = ap.parse_args()
 
