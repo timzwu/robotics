@@ -9,9 +9,10 @@ Modes (--mode):
   async   SmolVLA / pi0.5:     runs `python -m lerobot.async_inference.robot_client` against a policy
                                server (Modal, or local) for --duration seconds, then stops it
   sync    SmolVLA / pi0.5 on the Mac: runs `experiments/tools/sync_rollout.py` (predict a chunk, execute it,
-                               repeat; ~0.8 s think pause per chunk). The eval path used for R3/R4.
+                               repeat; ~0.8 s think pause per chunk). The eval path used for the first eval/the VLA evals.
   rtc     SmolVLA on the Mac with LeRobot's Real-Time Chunking backend (`lerobot-rollout --inference.type=rtc`):
                                continuous motion, next chunk inpainted to agree with the committed prefix.
+  llm     GPT-6 Astra through tools: runs `experiments/tools/llm_rollout.py` (see results/06_general_llm/).
   manual  no robot command:    you run the policy yourself; this just drives the protocol + CSV.
                                Use it to test the script without hardware.
 
@@ -20,7 +21,7 @@ Examples:
     python experiments/tools/eval.py --mode local --name act_50 --policy experiments/checkpoints/act_so101_blocks_20000
     python experiments/tools/eval.py --mode async --name smolvla_50 --policy-type smolvla \
         --policy $HF_USER/smolvla_blocks_50 --server 127.0.0.1:8080
-    python experiments/tools/eval.py --summary experiments/results/act_50.csv     # just recompute the summary
+    python experiments/tools/eval.py --summary experiments/results/01_model_comparison/act100k_pair.csv     # just recompute the summary
 
 Robot config comes from experiments/tools/robot.json (ports, arm ids, cameras for this rig).
 Output: experiments/results/<experiment>/<name>.csv + a printed summary with a 95% Wilson interval and failure breakdown.

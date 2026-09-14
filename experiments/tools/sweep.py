@@ -10,7 +10,7 @@ Real sweep on your own dataset:
     modal run experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla \
         --sizes 10,25,50,100 --steps 20000 --batch-size 64 --gpu L40S
 
-Writes experiments/results/02_data_scaling/sweep_<policy>_<seed>.json (the subsets + job names + results) so eval.py and
+Writes experiments/results/02_data_scaling/sweep_<policy>_<dataset>_s<seed>.json (the subsets + job names + results) so eval.py and
 the plot know exactly which episodes each checkpoint saw. Add `--dry-run` to print commands only.
 """
 

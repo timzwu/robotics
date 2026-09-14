@@ -1,5 +1,5 @@
 {
- "frame": "overhead 640x480, R1 layout (bowls left/right from the operator seat)",
+ "frame": "overhead 640x480, rig layout (bowls left/right from the operator seat)",
  "pixels": {
   "1": [
    434,

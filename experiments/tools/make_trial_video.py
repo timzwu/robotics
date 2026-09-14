@@ -1,7 +1,7 @@
 """Stitch recorded eval trials into one fast-forward mp4, labelled with the trial's task and outcome.
 
-    python experiments/tools/make_trial_video.py --name pi05_pair --speed 10 --out experiments/results/01_model_comparison/pi05full_pair_10x.mp4
-    python experiments/tools/make_trial_video.py --name pi05_pair --trials 9,10,12,15,16 --speed 5   # just the successes
+    python experiments/tools/make_trial_video.py --name pi05full_pair --speed 10 --out experiments/results/01_model_comparison/pi05full_pair_10x.mp4
+    python experiments/tools/make_trial_video.py --name pi05full_pair --trials 9,10,12,15,16 --speed 5   # just the successes
 
 Reads experiments/results/<experiment>/<name>.csv for the labels and experiments/results/trials/<name>_NN.mp4 (written by
 sync_rollout.py --record: overhead | wrist side by side, 1280x480, 30 s of motion per trial, think pauses cut).

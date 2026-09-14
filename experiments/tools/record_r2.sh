@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# R2: record the dataset in runs of 25, one task string per run, into ONE local dataset.
+# the dataset recording: record the dataset in runs of 25, one task string per run, into ONE local dataset.
 # Runs 1-4 cover the four tasks (ep 0-99); runs 5-6 add 25 more of the base pair (ep 100-149) so the
 # two-task pool is 100 episodes, 50 per task.
 # Usage: bash experiments/tools/record_r2.sh <run 1-6> [dataset name]   (run 1 creates, later runs resume)

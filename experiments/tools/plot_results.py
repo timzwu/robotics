@@ -127,7 +127,7 @@ def comparison_chart(out: Path) -> None:
     plt.close(fig)
 
 
-SWEEP = [("smolvla_n10_pair", 10, 0), ("smolvla_n25_pair", 25, 1), ("smolvla_n50_pair", 50, 4), ("smolvla100_pair", 100, 8)]  # run, demonstrations, Tim's blind guess (see 02_data_scaling/scaling_predictions.md)
+SWEEP = [("smolvla_n10_pair", 10, 0), ("smolvla_n25_pair", 25, 1), ("smolvla_n50_pair", 50, 4), ("smolvla100_pair", 100, 8)]  # run, demonstrations, my blind guess (see 02_data_scaling/README.md)
 
 
 def scaling_chart(out: Path) -> None:

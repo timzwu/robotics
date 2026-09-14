@@ -1,11 +1,11 @@
 """A general language model drives the arm through gripper poses (no demonstrations, no robot training).
 
 Replicates the interface of Robocurve's GPT-6 Astra arm test on our rig: each turn the model gets the camera frames
-and the current gripper pose, and answers with one `move_to` tool call (absolute gripper pose in the arm's base frame
+and the current gripper pose, and answers with one `move_to` or `move_joints` tool call (absolute gripper pose in the arm's base frame
 plus a gripper opening). Inverse kinematics (LeRobot's placo solver on the SO-101 URDF) turns the pose into joint
 angles; the arm moves there at a bounded speed with every command held within `clamp` degrees of the arm's ACTUAL
 position; the model gets the achieved pose, a stall flag and a holding flag, plus fresh frames. Trial rules match every
-other pass (30 s of arm motion, thinking excluded) plus the Robocurve budget of 20 model calls.
+other pass (30 s of arm motion, thinking excluded) no call limit by default (--max-calls; Robocurve used 20).
 
     python experiments/tools/llm_rollout.py --task "put the red block in the left bowl" --record trial.mp4 --frames-dir frames/
     python experiments/tools/llm_rollout.py --calibrate      # torque off; prints the gripper pose live (hold the arm!)

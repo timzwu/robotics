@@ -4,7 +4,7 @@
     python experiments/tools/make_llm_feed_video.py --name astra_pair --trials 5,11,13,18 --out .../astra_highlights_feed.mp4
 
 Inputs: experiments/results/<experiment>/<name>.calls.jsonl (one line per trial, written by llm_rollout.py --log; every
-call with its `why`, requested and achieved pose, think and move seconds), <name>.csv (Tim's verdict and notes) and
+call with its `why`, requested and achieved pose, think and move seconds), <name>.csv (my verdict and notes) and
 experiments/results/trials/<name>_NN.mp4 (overhead | wrist, motion only, think pauses cut).
 
 Layout: overhead camera over wrist camera on the left; on the right a feed of the model's calls. Each call is shown in two

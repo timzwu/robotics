@@ -10,7 +10,7 @@ processes:
 
 The server is GENERIC: it does not take a policy. The CLIENT sends policy_type and
 pretrained_name_or_path, and the server loads that model on first request. So the same server works
-for smolvla_base today and your own fine-tuned checkpoint after R4.
+for smolvla_base today and your own fine-tuned checkpoint after the VLA evals.
 
     # 1. start the server (prints the address to use; holds a GPU until it exits)
     modal run experiments/tools/modal_policy_server.py --minutes 30

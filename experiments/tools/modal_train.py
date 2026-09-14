@@ -444,7 +444,7 @@ MEASURED_SEC_PER_STEP = {
 }
 MULTI_CARD_SCALING = 0.88   # MEASURED Sept 12: pi0.5 on 2 x H100 ran 0.66 s/step vs 1.18 on one (1.77x); one H100 node, NVLink
 STARTUP_H = 0.1             # container start + dataset/model pull (pi0.5 cold cache was ~10 min)
-MAX_GPUS_PER_JOB = 8   # raised from 4 on Sept 13 (Tim) for the unfrozen pi0.5 run; one Modal node holds up to 8 H100s
+MAX_GPUS_PER_JOB = 8   # raised from 4 on Sept 13 (the author) for the unfrozen pi0.5 run; one Modal node holds up to 8 H100s
 MAX_RUN_HOURS = 20.0        # Modal kills a call at 24 h; a run estimated past this is refused instead of launched
 CONFIRM_COST_USD = 40.0     # runs estimated above this need --confirm-cost (~4% of the credits)
 

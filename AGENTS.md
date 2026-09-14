@@ -10,19 +10,19 @@ A personal learning workspace for imitation learning on a low-cost robot arm wit
 `huggingface/lerobot`; the `lerobot` library is a dependency. The content is experiment scripts,
 setup notes, and results for one rig: an SO-101 leader/follower arm pair, two USB cameras, a mat.
 
-The experiment plan (one task, three policies, a data-scaling sweep, a camera ablation, an honest
-20-trial eval protocol) is described in `experiments/README.md`. Read that first.
+The experiments (one task, three policies plus a language-model extension, a data-scaling sweep, a camera
+ablation, an execution-method test, a 20-trial eval protocol) are described in `experiments/README.md`. Read
+that first. The published write-up is https://timzwu.substack.com/p/teaching-a-robot-to-pick-up-a-block.
 
 ## Layout
 
 | Path | What |
 |---|---|
 | `experiments/` | The real content: Modal trainer, data-scaling sweep, 20-position eval protocol, rig config, results. See `experiments/README.md`. |
-| `experiments/results/` | Committed CSVs, comparison tables, plots (empty until evals run). |
+| `experiments/results/` | Committed CSVs, write-ups, plots and final reels, one folder per experiment (`01_model_comparison` … `06_general_llm`); raw trial footage under `trials/` is gitignored. |
 | `experiments/checkpoints/` | Pulled checkpoints. **Gitignored.** |
 | `notes/setup.md` | Environment and hardware setup walkthrough with rationale. Human-facing. Its TODO list is historical. |
 | `scripts/` | Reusable shell wrappers, e.g. `scripts/teleop.sh`. Long CLI invocations go here, never pasted. |
-| `scratch/`, `notebooks/` | Placeholders, currently empty. |
 | `outputs/`, `data/`, `wandb/`, `*.pt`, `*.ckpt` | Gitignored artifacts. |
 
 ## Environment
