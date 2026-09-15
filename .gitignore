@@ -44,3 +44,10 @@ logs/
 experiments/results/06_general_llm/astra_pair_10x.mp4
 experiments/results/06_general_llm/astra_pair_feed_highlights_6x.mp4
 experiments/results/trials/
+
+# sim: exported real episodes (regenerate with sim/so101_blocks/export_episode.py)
+sim/02_scene/real_episodes/
+
+# sim: the recorded sim dataset lives on the Hub (timzwu/so101_blocks_sim, private); raw side clips are stitched into the reel
+sim/03_sim_demos/so101_blocks_sim/
+sim/03_sim_demos/so101_blocks_sim_extras/*.mp4

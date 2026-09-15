@@ -1,0 +1,56 @@
+#usda 1.0
+(
+    defaultPrim = "Mat"
+    metersPerUnit = 1
+    upAxis = "Z"
+)
+
+def Xform "Mat"
+{
+    def Mesh "Mesh" (
+        prepend apiSchemas = ["MaterialBindingAPI", "PhysicsCollisionAPI", "PhysicsMeshCollisionAPI"]
+    )
+    {
+        float3[] extent = [(-0.3000, -0.4500, -0.0030), (0.3000, 0.4500, 0)]
+        int[] faceVertexCounts = [4, 4, 4, 4, 4, 4]
+        int[] faceVertexIndices = [0, 3, 2, 1, 4, 5, 6, 7, 0, 1, 5, 4, 1, 2, 6, 5, 2, 3, 7, 6, 3, 0, 4, 7]
+        point3f[] points = [(-0.3000, -0.4500, -0.0030), (0.3000, -0.4500, -0.0030), (0.3000, 0.4500, -0.0030), (-0.3000, 0.4500, -0.0030), (-0.3000, -0.4500, 0.0000), (0.3000, -0.4500, 0.0000), (0.3000, 0.4500, 0.0000), (-0.3000, 0.4500, 0.0000)]
+        texCoord2f[] primvars:st = [(0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 0.0000), (1.0000, 0.0000), (1.0000, 1.0000), (0.0000, 1.0000), (0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 0.0000), (1.0000, 1.0000), (1.0000, 0.0000), (0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 1.0000), (1.0000, 1.0000), (0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 0.0000), (0.0000, 1.0000), (0.0000, 0.0000), (0.0000, 0.0000), (1.0000, 0.0000), (0.0000, 0.0000)] (
+            interpolation = "faceVarying"
+        )
+        uniform token subdivisionScheme = "none"
+        uniform token physics:approximation = "convexHull"
+        bool physics:collisionEnabled = 1
+        rel material:binding = </Mat/Looks/MatMaterial>
+    }
+    def Scope "Looks"
+    {
+        def Material "MatMaterial"
+        {
+            token outputs:surface.connect = </Mat/Looks/MatMaterial/Surface.outputs:surface>
+            def Shader "Surface"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor.connect = </Mat/Looks/MatMaterial/Texture.outputs:rgb>
+                float inputs:roughness = 0.8
+                float inputs:metallic = 0
+                token outputs:surface
+            }
+            def Shader "Reader"
+            {
+                uniform token info:id = "UsdPrimvarReader_float2"
+                token inputs:varname = "st"
+                float2 outputs:result
+            }
+            def Shader "Texture"
+            {
+                uniform token info:id = "UsdUVTexture"
+                asset inputs:file = @./mat.png@
+                float2 inputs:st.connect = </Mat/Looks/MatMaterial/Reader.outputs:result>
+                token inputs:wrapS = "clamp"
+                token inputs:wrapT = "clamp"
+                float3 outputs:rgb
+            }
+        }
+    }
+}

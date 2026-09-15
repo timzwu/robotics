@@ -44,10 +44,10 @@ to the dataset owner. The recorded dataset is private, so reproducing training r
 
 # train, each at its authors' recipe
 modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy act --episodes 0-49,100-149 --steps 100000 --batch-size 8 --yes
-modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy smolvla --episodes 0-49,100-149 --steps 20000 --batch-size 64 --gpu L40S --rename-map top=camera1,wrist=camera2 --yes
+modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy smolvla --episodes 0-49,100-149 --steps 20000 --batch-size 64 --gpu L40S --rename-map '{"observation.images.top": "observation.images.camera1", "observation.images.wrist": "observation.images.camera2"}' --yes
 modal run --detach experiments/tools/modal_train.py::main --dataset $HF_USER/so101_blocks --policy pi05full --episodes 0-49,100-149 --steps 30000 --batch-size 32 --gpu H100 --gpus 4 --confirm-cost --yes
 # data-scaling sweep (nested subsets, one launch)
-modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50 --pool 0-49,100-149 --strata 25 --seed 0 --steps 20000 --batch-size 64 --gpu L40S --rename-map top=camera1,wrist=camera2 --yes
+modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50 --pool 0-49,100-149 --strata 25 --seed 0 --steps 20000 --batch-size 64 --gpu L40S --rename-map '{"observation.images.top": "observation.images.camera1", "observation.images.wrist": "observation.images.camera2"}' --yes
 # pull a checkpoint (plain `modal volume get` on checkpoints/last fails: `last` is a symlink)
 modal run experiments/tools/modal_train.py::pull --job-name <job> --dest experiments/checkpoints/<job>
 
