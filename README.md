@@ -1,15 +1,15 @@
 # robotics
 
 Robotics experiments, results, and setup notes, with write-ups on Substack. The first project tests robot
-policies on an SO-101 arm using [LeRobot](https://github.com/huggingface/lerobot). Planned work includes simulation,
-transfer between robot bodies, and reinforcement learning.
+policies on an SO-101 arm using [LeRobot](https://github.com/huggingface/lerobot). The simulation experiments test synthetic training data on the same task. Planned work includes
+transfer between robot bodies and reinforcement learning.
 
 **Substack**
 
 | # | Post | What it covers | Where the work is |
 |---|---|---|---|
 | 0 | [Teaching a Robot to Pick Up a Block](https://timzwu.substack.com/p/teaching-a-robot-to-pick-up-a-block) (Sept 14, 2026) | ACT vs SmolVLA vs π0.5 on one pick-and-place task, a data-scaling curve, a camera ablation, Real-Time Chunking, and GPT-6 Astra with no demonstrations | [`experiments/`](experiments/) |
-| 1 | [The Simulation Gap in Robotics](https://timzwu.substack.com/p/the-simulation-gap-in-robotics) (Sept 17, 2026) | The same task recreated in Isaac Sim; SmolVLA fine-tuned on scripted sim demonstrations, on sim + real, and on real, evaluated on the arm and inside the simulator; a second sim recipe with recovery episodes and varied grasps | [`sim/`](sim/) |
+| 1 | [The Simulation Gap in Robotics](https://timzwu.substack.com/p/the-simulation-gap-in-robotics) (Sept 17, 2026) | Scripted data in Isaac Sim: sim v1 vs v2, sim-only vs co-training, and evaluation in both environments | [`sim/`](sim/) |
 
 ## 0 · Three generations of robot policy on one task
 
@@ -26,21 +26,24 @@ Same task, 20 block positions, and 30 s of arm motion per trial, excluding infer
 control interface and about 100 s of thinking per trial. This comparison includes differences in control and compute. See [`experiments/README.md`](experiments/README.md)
 for the six questions, protocol, and results.
 
-## 1 · Simulated demonstrations, on the arm and in the simulator
+## 1 · Learning from simulated demonstrations
 
-![Success in the simulator and on the real arm, second round](sim/04_real_evals/sim_vs_real_by_condition_v2.png)
+![Success in simulation and on the real arm](sim/04_real_evals/sim_vs_real_by_condition_v2.png)
 
-| Condition | Demonstrations | Real arm (20 trials) | In the simulator |
-|---|---|---|---|
-| Real only | 100 teleop | 9 / 20 (26–66%) | 0 / 20 |
-| Sim only, first recipe | 100 scripted sim | 0 / 20 (0–16%) | 0 / 20 |
-| Sim + real, first recipe | 100 sim + 100 real | 4 / 20 (8–42%) | 1 / 20 |
-| Sim only, second recipe | 100 scripted sim (recovery, varied grasps, photo mat) | 0 / 20 (0–16%) | 2 / 20 |
-| Sim + real, second recipe | 100 sim + 100 real | 7 / 20 (18–57%) | 4 / 20 |
-| 75 / 25 real : sim, first recipe | 100 real + 33 sim | 3 / 20 (1–28%) | not run |
+| Training data | Real arm | Simulator |
+|---|---|---|
+| Real only · 100 real | 9/20 | 0/20 |
+| Sim v1 only · 100 sim | 0/20 | 0/20 |
+| Co-trained v1 · 100 real + 100 sim v1 | 4/20 | 1/20 |
+| Sim v2 only · 100 sim | 0/20 | 2/20 |
+| Co-trained v2 · 100 real + 100 sim v2 | 7/20 | 4/20 |
+| 75/25 real/sim · 100 real + 33 sim v1 | 3/20 | Not run |
 
-Same SmolVLA recipe, task pair, 20 sticker positions and 30 s budget in both worlds. Scripted sim demonstrations did
-not transfer on their own; how they were scripted changed what co-training gave back. See [`sim/README.md`](sim/README.md).
+Twenty trials per evaluation. Sim v2 added recovery attempts, varied grasps, and a closer visual match.
+Co-training improved, but remained below the real-only baseline. Sim-trained policies also struggled
+inside the simulator, so transfer alone does not explain the failures.
+
+[Setup, methods, and results](sim/README.md)
 
 ## The rig
 

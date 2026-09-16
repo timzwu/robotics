@@ -1,23 +1,18 @@
-# 01 · Isaac Sim pipeline check
+# Isaac Sim pipeline check
 
-Step 1 of the sim-to-real plan (`../README.md`): can I render the SO-101 in Isaac Sim, headless, on a rented GPU, from a
-script I run from my laptop? Sept 14, 2026.
+Can the SO-101 run headlessly in Isaac Sim on a cloud GPU? The smoke test loaded the arm,
+simulated a falling block, and rendered two camera views on a Lambda A6000.
 
-**Result: yes.** One Lambda Cloud A6000 (~$1.09/h), Isaac Sim 5.1 inside NVIDIA's `isaac-lab:2.3.2` container, the
-workshop's SO-101 model (45 prims) in an empty scene with a falling block. The block settles on the ground (physics),
-and both cameras return a rendered frame (graphics).
-
-| check | value |
+| Check | Result |
 |---|---|
-| robot prims loaded | 45 |
-| block height before / after 120 physics steps | 0.100 m / 0.015 m (resting on the ground) |
-| overhead frame | 640×480, pixel std 40.5 |
-| wall time inside the container | 33 s (image cached; a cold start took 127 s of shader compile) |
-| session cost | ~30 min of A6000 ≈ $0.55, four failed runs included |
+| Physics | Block settled from 10 cm to 1.5 cm above the ground |
+| Rendering | Both cameras returned frames; overhead resolution 640×480 |
+| Runtime | 33 seconds with the container image cached |
+| Session cost | About $0.55, including failed setup attempts |
 
-![overhead](so101_frame.png) ![three-quarter](so101_frame_side.png)
+![SO-101 overhead view](so101_frame.png)
 
-Files: `smoke.json` (the checks above, written by the script), `so101_frame.png` (overhead), `so101_frame_side.png`.
-Scripts: `../tools/lambda_vm.py` (launch / status / terminate), `../tools/vm_setup.sh` (runs on the VM),
-`../tools/isaac_smoke_so101.py` (runs inside the container). How it went, including the four things that broke first:
-`methods.md`.
+Isaac Sim 5.1 ran inside NVIDIA's Isaac Lab 2.3.2 container. This verified the physics and
+rendering pipeline; task setup and robot control followed in [scene calibration](../02_scene/).
+
+[Methods and setup](methods.md) · [Test results](smoke.json) · [Side view](so101_frame_side.png)
