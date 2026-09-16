@@ -20,5 +20,5 @@ Co-trained v2 scored 7/20 on the physical arm and 4/20 in simulation, up from 4/
 Sim-only v2 scored 0/20 on the arm and 2/20 in simulation. The revised data improved co-training,
 but the real-only policy still led on the arm at 9/20.
 
-[Methods and generation logs](methods.md) · [Evaluation results and videos](../04_real_evals/) ·
+[Methods](methods.md) · [Evaluation results and videos](../04_real_evals/) ·
 [Training log](../../experiments/results/training_runs.md)

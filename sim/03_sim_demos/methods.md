@@ -24,7 +24,7 @@ it is not in the dataset. Verified: a 2-episode smoke dataset written by 0.4.3 l
 
 ## Commands
 
-These commands describe sim v1 at commit `2e631e0`. The current recorder generates sim v2; setting its recovery share to zero does not recreate v1.
+These commands describe sim v1 at commit `1026340`. The current recorder generates sim v2; setting its recovery share to zero does not recreate v1.
 
 ```bash
 LAMBDA_YES=1 python3 sim/tools/lambda_vm.py launch --type gpu_1x_a10 --region us-east-1     # the A6000 was sold out

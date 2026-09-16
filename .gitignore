@@ -82,3 +82,14 @@ sim/05_sim_demos_v2/so101_blocks_sim_v2_extras/*.mp4
 !/experiments/results/06_general_llm/astra_pair_10x_with_thinking.mp4
 !/sim/02_scene/replay_ep0_compare_top-publication-copy.mp4
 !/sim/04_real_evals/policies_v1_simeval_stacked_10x.mp4
+
+# Detailed run records stay local; publish selected outcomes and summaries instead.
+*.calls.jsonl
+/experiments/results/training_loss.csv
+/sim/01_pipeline/smoke.json
+/sim/02_scene/scene.json
+/sim/02_scene/replay*.json
+/sim/02_scene/replay*.npz
+/sim/03_sim_demos/*_extras/*.json
+/sim/05_sim_demos_v2/*_extras/*.json
+/sim/04_real_evals/*_simeval.json
