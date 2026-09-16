@@ -1,5 +1,7 @@
 # Simulation experiments
 
+[Article figures, tables, and videos](article-media/)
+
 Can simulated demonstrations replace or improve real robot training data? I recreated the SO-101
 pick-and-place task in Isaac Sim and compared SmolVLA fine-tuned on real, simulated, and combined data.
 

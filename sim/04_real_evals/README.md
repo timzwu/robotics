@@ -35,9 +35,20 @@ from physics proxies rather than the human labels used on the arm.
 
 ## Videos and data
 
+[Article Video 5: synchronized sim v1 comparison](policies_v1_simeval_stacked_10x.mp4) ·
+[All article figures, tables, and videos](../article-media/)
+
 - [Co-trained v2 on the physical arm and in simulation, 10×](smolvla_simreal_v2_real_and_sim_10x-publication-copy.mp4)
 - [Sim-only v1 on the physical arm, 10×](smolvla_sim_pair_10x-publication-copy.mp4)
 - [Co-trained v1 on the physical arm, 10×](smolvla_simreal_pair_10x-publication-copy.mp4)
+
+Simulator-only reels, all 20 trials at 10×:
+
+- [Real-only policy](smolvla_real_simeval_10x.mp4)
+- [Sim-only v1](smolvla_sim_simeval_10x.mp4)
+- [Co-trained v1](smolvla_simreal_simeval_10x.mp4)
+- [Sim-only v2](smolvla_sim_v2_simeval_10x.mp4)
+- [Co-trained v2](smolvla_simreal_v2_simeval_10x.mp4)
 
 [Methods](methods.md) · [All 220 trial outcomes](all_trials_sim.csv) ·
 [Training log](../../experiments/results/training_runs.md) ·

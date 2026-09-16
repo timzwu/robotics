@@ -18,3 +18,5 @@ establish reliable contact behavior. The subsequent demonstration script planned
 object positions in the simulator.
 
 [Methods and measurements](methods.md) · [Scene code](../so101_blocks/)
+
+[Article Video 1: overhead replay](replay_ep0_compare_top-publication-copy.mp4)

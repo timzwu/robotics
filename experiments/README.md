@@ -1,5 +1,7 @@
 # Experiments
 
+[Article figures, tables, and videos](article-media/)
+
 Code and results for the robotics experiments in this repo. Each experiment folder contains its question,
 method, results, and supporting data.
 
