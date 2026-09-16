@@ -59,7 +59,7 @@ run_in_sim() {  # run_in_sim <script args...>; the workshop's entrypoint pip-ins
   # the entrypoint `source`s /root/env under set -e, so the file must exist; PYTHONPATH covers both packages even if the editable install misbehaves
   # a hard cap: Kit can outlive a crashed script; on timeout the container is killed (it is --rm, so also removed)
   $D rm -f simjob >/dev/null 2>&1 || true
-  timeout -k 30 "${JOB_TIMEOUT:-1500}" $D run --rm --name simjob --device nvidia.com/gpu=all --network=host -e ACCEPT_EULA=Y -e PRIVACY_CONSENT=Y -e WRIST_TILT="${WRIST_TILT:--70}" -e WRIST_ROLL="${WRIST_ROLL:-180}" -e WRIST_X="${WRIST_X:--0.005}" \
+  timeout -k 30 "${JOB_TIMEOUT:-1500}" $D run --rm --name simjob --device nvidia.com/gpu=all --network=host -e ACCEPT_EULA=Y -e PRIVACY_CONSENT=Y -e WRIST_TILT="${WRIST_TILT:--70}" -e WRIST_ROLL="${WRIST_ROLL:-180}" -e WRIST_X="${WRIST_X:--0.005}" -e POLICY_URL="${POLICY_URL:-}" -e POLICY_TOKEN="${POLICY_TOKEN:-}" \
     -e PYTHONPATH=/workspace:/workspace/Sim-to-Real-SO-101-Workshop/source -v "$WS/docker/env":/root/env:ro \
     -v ~/isaac-cache/kit:/isaac-sim/kit/cache:rw -v ~/isaac-cache/ov:/root/.cache/ov:rw -v ~/isaac-cache/pip:/root/.cache/pip:rw \
     -v ~/isaac-cache/glcache:/root/.cache/nvidia/GLCache:rw -v ~/isaac-cache/computecache:/root/.nv/ComputeCache:rw \
@@ -97,9 +97,16 @@ replay() {  # EP=000 (default) selects /data/episode_EP.npz; output in /out/repl
 record() {  # EPISODES=100 (default); a smoke run: EPISODES=2 bash vm_session2.sh record
   N="${EPISODES:-100}"; OUTD="/out/datasets/so101_blocks_sim${TAG:-}"
   echo "== record $N sim demonstrations -> $OUTD (headless, DR)"
-  JOB_TIMEOUT=10800 run_in_sim /workspace/so101_blocks/scripts/record_demos.py --headless --episodes "$N" --out "$OUTD" --seed "${SEED:-0}" 2>&1 | tee "$OUT/record${TAG:-}.log" | grep -E "^\[record\]|^\[limits\]|Error|error|Traceback" | grep -v "carb.windowing\|GLFW\|platforminfo\|OgnSd" || true
+  JOB_TIMEOUT=10800 run_in_sim /workspace/so101_blocks/scripts/record_demos.py --headless --episodes "$N" --out "$OUTD" --seed "${SEED:-0}" --repo-id "timzwu/so101_blocks_sim${TAG:-}" --recovery-share "${RECOVERY:-0.15}" 2>&1 | tee "$OUT/record${TAG:-}.log" | grep -E "^\[record\]|^\[limits\]|Error|error|Traceback" | grep -v "carb.windowing\|GLFW\|platforminfo\|OgnSd" || true
   [ -f "$OUT/${OUTD#/out/}_extras/record_log.json" ] || { echo "no record_log.json; last lines of record.log:"; grep -v "Warning" "$OUT/record${TAG:-}.log" | tail -40; exit 10; }
   du -sh "$OUT/${OUTD#/out/}"; ls "$OUT/${OUTD#/out/}"; ls "$OUT/${OUTD#/out/}_extras" | head
+}
+
+simeval() {  # NAME, POLICY (path on the Modal volume), POLICY_URL, POLICY_TOKEN; POSITIONS=1-20
+  : "${POLICY_URL:?set POLICY_URL}" "${POLICY_TOKEN:?set POLICY_TOKEN}" "${NAME:?set NAME}" "${POLICY:?set POLICY}"
+  echo "== sim eval $NAME on $POLICY, positions ${POSITIONS:-1-20}"
+  JOB_TIMEOUT=7200 run_in_sim /workspace/so101_blocks/scripts/eval_in_sim.py --headless --name "$NAME" --policy "$POLICY" --positions "${POSITIONS:-1-20}" --out /out/simeval 2>&1 | tee "$OUT/simeval_$NAME.log" | grep -E "^\[simeval\]|^\[limits\]|Error|error|Traceback" | grep -v "carb.windowing\|GLFW\|platforminfo\|OgnSd" || true
+  [ -f "$OUT/simeval/$NAME.csv" ] || { echo "no csv; last lines:"; grep -v "Warning" "$OUT/simeval_$NAME.log" | tail -30; exit 13; }
 }
 
 case "$STEP" in
@@ -108,6 +115,7 @@ case "$STEP" in
   scene) scene ;;
   wrist) wrist_sweep ;;
   record) record ;;
+  simeval) simeval ;;
   replay) replay ;;
   all) setup; build; scene; replay ;;
   *) echo "unknown step $STEP"; exit 2 ;;

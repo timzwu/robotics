@@ -13,3 +13,10 @@ gym.register(
     disable_env_checker=True,
     kwargs={"env_cfg_entry_point": f"{__name__}.blocks_env_cfg:BlocksDREnvCfg"},
 )
+
+gym.register(
+    id="So101-Blocks-Eval-v0",
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    disable_env_checker=True,
+    kwargs={"env_cfg_entry_point": f"{__name__}.blocks_env_cfg:BlocksEvalEnvCfg"},
+)

@@ -20,6 +20,7 @@ parser.add_argument("--repo-id", default="timzwu/so101_blocks_sim")
 parser.add_argument("--seed", type=int, default=0)
 parser.add_argument("--reel-every", type=int, default=10, help="write the side camera's mp4 for every Nth episode (0 = never)")
 parser.add_argument("--max-attempts", type=int, default=4, help="re-rolls per episode when the block does not end in the bowl")
+parser.add_argument("--recovery-share", type=float, default=0.15, help="share of episodes that miss first, reopen and re-grasp")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
 args.enable_cameras = True
@@ -46,8 +47,9 @@ FEATURES = {
     "observation.images.wrist": {"dtype": "video", "shape": (rig.IMG_H, rig.IMG_W, 3), "names": ["height", "width", "channels"]},
 }
 TASKS = {"red": ("put the red block in the left bowl", "left"), "blue": ("put the blue block in the right bowl", "right")}
-GRIP_OPEN, GRIP_CLOSE, GRIP_REST = 20.0, 5.0, 1.0        # LeRobot gripper units, from the real episodes
-ZONE_HALF = rig.TAPE_OUTER / 2 - rig.TAPE_WIDTH - 0.025    # keep the block clear of the tape
+GRIP_CLOSE, GRIP_REST = 5.0, 1.0                           # LeRobot gripper units, from the real episodes
+ZONE_HALF = rig.TAPE_OUTER / 2 - rig.TAPE_WIDTH - 0.018    # v2: up to the tape's inner edge minus the block's half side
+RECOVERY_SHARE = 0.15                                      # v2: episodes that miss first, reopen and re-grasp
 
 
 def smoothstep(t):
@@ -59,28 +61,57 @@ def yaw_of(quat_wxyz):
     return math.atan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
 
 
-def plan(block_xy, block_yaw, bowl_xy, q_rest, rng):
-    """Joint-space waypoints (rad, 5 arm joints) and per-segment durations (s); gripper schedule separately."""
-    hover_z = 0.10 + rng.uniform(-0.01, 0.02)
+def approach_dir(rng, max_tilt_deg=25.0):
+    t, ph = math.radians(rng.uniform(0.0, max_tilt_deg)), rng.uniform(0.0, 2 * math.pi)
+    return np.array([math.sin(t) * math.cos(ph), math.sin(t) * math.sin(ph), -math.cos(t)])
+
+
+def plan(block_xy, block_yaw, bowl_xy, q_rest, rng, recovery=False):
+    """Joint-space waypoints (rad, 5 arm joints), per-segment durations (s) and the gripper command at each segment's end.
+    v2 (Sept 16): varied hover height, approach tilt and speed, the jaw orientation chosen at random among the two valid
+    ones, a wider and varied opening, random pauses, a small wiggle before closing, and 15% recovery episodes: the first
+    grasp is deliberately 1.2-2.5 cm off, the jaws close on nothing, lift, reopen, and the second attempt (half of them
+    with the jaws turned 90 deg) takes the block."""
+    dur = lambda base: base * rng.uniform(0.6, 1.4)
+    open_w = rng.uniform(22.0, 35.0)                             # the real operator opened to 16-37; below 22 the moving tip can land on the block's edge
+    hover_z = rng.uniform(0.06, 0.14)
+    ap = approach_dir(rng)
     q_hover0, _, _ = ik.solve(np.array([*block_xy, hover_z]), q_rest)
     _, _, d = ik.frame(np.concatenate([q_hover0, [0.3]]))
     cur = math.atan2(d[1], d[0])
-    cands = [block_yaw + k * math.pi / 2 for k in range(4)]
-    heading = min(cands, key=lambda h: abs((h - cur + math.pi) % (2 * math.pi) - math.pi))
-    q_hover, e1, _ = ik.solve(np.array([*block_xy, hover_z]), q_rest, heading=heading)
-    q_grasp, e2, tilt = ik.solve(np.array([*block_xy, 0.010]), q_hover, heading=heading)
-    q_bowl, e3, _ = ik.solve(np.array([*bowl_xy, 0.11]), q_hover)
-    segs = [  # (target joints, duration s, gripper command at the end of the segment)
-        (q_hover, 2.4 * rng.uniform(0.85, 1.2), GRIP_OPEN),
-        (q_grasp, 1.6 * rng.uniform(0.85, 1.2), GRIP_OPEN),
-        (q_grasp, 0.7, GRIP_CLOSE),                       # close
-        (q_hover, 1.2 * rng.uniform(0.85, 1.2), GRIP_CLOSE),
-        (q_bowl, 2.4 * rng.uniform(0.85, 1.2), GRIP_CLOSE),
-        (q_bowl, 0.7, GRIP_OPEN),                         # release
-        (q_rest, 2.4 * rng.uniform(0.85, 1.2), GRIP_REST),
-        (q_rest, 0.6, GRIP_REST),
-    ]
-    return segs, {"ik_err_mm": [round(1000 * e, 2) for e in (e1, e2, e3)], "grasp_tilt_deg": round(tilt, 1), "heading_deg": round(math.degrees(heading), 1)}
+    cands = sorted([block_yaw + k * math.pi / 2 for k in range(4)], key=lambda h: abs((h - cur + math.pi) % (2 * math.pi) - math.pi))
+    heading = cands[0] if rng.uniform() < 0.6 else cands[1]      # the nearest valid orientation, or the other one
+    q_hover, e1, _ = ik.solve(np.array([*block_xy, hover_z]), q_rest, heading=heading, approach=ap, down_w=0.08)
+    q_grasp, e2, tilt = ik.solve(np.array([*block_xy, 0.010]), q_hover, heading=heading, approach=ap, down_w=0.08)
+    wig = np.array([rng.uniform(-0.004, 0.004), rng.uniform(-0.004, 0.004), 0.0])
+    q_wig, _, _ = ik.solve(np.array([*block_xy, 0.010]) + wig, q_grasp, heading=heading, approach=ap, down_w=0.08)
+    q_bowl, e3, _ = ik.solve(np.array([*bowl_xy, rng.uniform(0.09, 0.13)]), q_hover)
+    segs = [(q_hover, dur(2.4), open_w), (q_hover, rng.uniform(0.0, 0.6), open_w)]         # approach, pause
+    info = {"recovery": recovery}
+    if recovery:
+        # the miss is perpendicular to the jaw axis of the solved grasp, far enough that neither the descent nor the
+        # closing jaws touch the block (checked on the finger model: 2.3-3.0 cm clears it; a random direction did not)
+        _, _, dj = ik.frame(np.concatenate([q_grasp, [0.3]]))
+        perp = np.array([-dj[1], dj[0]]); perp /= np.linalg.norm(perp)
+        miss = rng.uniform(0.023, 0.030) * (1.0 if rng.uniform() < 0.5 else -1.0)
+        off = miss * perp
+        q_miss, _, _ = ik.solve(np.array([*(np.asarray(block_xy) + off), 0.010]), q_hover, heading=heading, approach=ap, down_w=0.08)
+        q_miss_up, _, _ = ik.solve(np.array([*(np.asarray(block_xy) + off), hover_z * 0.6]), q_miss, heading=heading, approach=ap, down_w=0.08)
+        segs += [(q_miss, dur(1.6), open_w), (q_miss, 0.7, GRIP_CLOSE), (q_miss_up, dur(1.0), GRIP_CLOSE),   # miss, close on nothing, lift
+                 (q_miss_up, rng.uniform(0.3, 0.8), open_w)]                                                   # reopen
+        if rng.uniform() < 0.5:                                                                                 # turn the jaws 90 deg for the retry
+            heading = cands[1] if heading == cands[0] else cands[0]
+            q_grasp, e2, tilt = ik.solve(np.array([*block_xy, 0.010]), q_miss_up, heading=heading, approach=ap, down_w=0.08)
+            q_wig, _, _ = ik.solve(np.array([*block_xy, 0.010]) + wig, q_grasp, heading=heading, approach=ap, down_w=0.08)
+        q_hover_r, _, _ = ik.solve(np.array([*block_xy, hover_z * 0.6]), q_miss_up, heading=heading, approach=ap, down_w=0.08)
+        segs += [(q_hover_r, dur(1.0), open_w)]                                                                # back above the block before the retry descends
+        info["miss_cm"] = round(100 * abs(miss), 1)
+    segs += [(q_grasp, dur(1.6), open_w), (q_wig, 0.4, open_w), (q_grasp, 0.7, GRIP_CLOSE + rng.uniform(-2.0, 2.0)),   # descend, wiggle, close
+             (q_hover, dur(1.2), GRIP_CLOSE), (q_bowl, dur(2.4), GRIP_CLOSE), (q_bowl, rng.uniform(0.0, 0.5), GRIP_CLOSE),
+             (q_bowl, 0.7, open_w), (q_rest, dur(2.4), GRIP_REST), (q_rest, 0.6, GRIP_REST)]
+    info.update({"ik_err_mm": [round(1000 * e, 2) for e in (e1, e2, e3)], "grasp_tilt_deg": round(tilt, 1), "heading_deg": round(math.degrees(heading), 1),
+                 "open_w": round(open_w, 1), "hover_cm": round(100 * hover_z, 1)})
+    return segs, info
 
 
 def main():
@@ -125,7 +156,11 @@ def main():
         done = False
         for attempt in range(1, args.max_attempts + 1):
             obs, _ = env.reset()
-            xy = (rig.TAPE_CENTER[0] + rng.uniform(-ZONE_HALF, ZONE_HALF), rig.TAPE_CENTER[1] + rng.uniform(-ZONE_HALF, ZONE_HALF))
+            if rng.uniform() < 0.3:   # v2: a third of the episodes near a sticker (the eval spots), the rest anywhere inside the tape
+                sx, sy = rig.STICKERS[int(rng.integers(1, 21))]
+                xy = (sx + rng.uniform(-0.012, 0.012), sy + rng.uniform(-0.012, 0.012))
+            else:
+                xy = (rig.TAPE_CENTER[0] + rng.uniform(-ZONE_HALF, ZONE_HALF), rig.TAPE_CENTER[1] + rng.uniform(-ZONE_HALF, ZONE_HALF))
             yaw = rng.uniform(-math.pi, math.pi)
             set_block(blocks[colour], xy, yaw)
             other = "blue" if colour == "red" else "red"
@@ -136,7 +171,7 @@ def main():
             bp = blocks[colour].data.root_pos_w[0].cpu().numpy() - origins[0].cpu().numpy()
             byaw = yaw_of(blocks[colour].data.root_quat_w[0].cpu().numpy())
             bowl_xy = rig.BOWLS[bowl][:2]
-            segs, info = plan(bp[:2], byaw, np.array(bowl_xy), q_rest6[:5], rng)
+            segs, info = plan(bp[:2], byaw, np.array(bowl_xy), q_rest6[:5], rng, recovery=rng.uniform() < args.recovery_share)
             reel = Mp4(f"{args.out}_extras/side_ep{ep:03d}.mp4", FPS, (rig.IMG_W, rig.IMG_H)) if (args.reel_every and ep % args.reel_every == 0 and "rgb_side" in obs["visual"]) else None
             q_from, grip_from, frames = q_rest6[:5].copy(), GRIP_REST, 0
             if True:

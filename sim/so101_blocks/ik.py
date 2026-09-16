@@ -21,10 +21,11 @@ def frame(q_rad):
     return mid, a, d
 
 
-def residual(q5, target, down_w, heading, heading_w, q_prev, reg_w):
+def residual(q5, target, down_w, heading, heading_w, q_prev, reg_w, approach=None):
     q = np.concatenate([q5, [np.deg2rad(20.0)]])          # jaws open for the geometry
     mid, a, d = frame(q)
-    r = [mid - target, down_w * (a - np.array([0.0, 0.0, -1.0]))]
+    want = np.array([0.0, 0.0, -1.0]) if approach is None else np.asarray(approach, float) / np.linalg.norm(approach)
+    r = [mid - target, down_w * (a - want)]
     if heading is not None:
         h = np.array([np.cos(heading), np.sin(heading), 0.0])
         r.append(heading_w * (d - h * np.sign(d @ h if abs(d @ h) > 1e-6 else 1.0)))   # either jaw side across the face
@@ -32,16 +33,17 @@ def residual(q5, target, down_w, heading, heading_w, q_prev, reg_w):
     return np.concatenate(r)
 
 
-def solve(target, q_init, down_w=0.05, heading=None, heading_w=0.03, reg_w=0.01, iters=60, damping=1e-3):
-    """Returns (q5, position error in metres). Joint limits enforced by clipping."""
+def solve(target, q_init, down_w=0.05, heading=None, heading_w=0.03, reg_w=0.01, iters=60, damping=1e-3, approach=None):
+    """Returns (q5, position error in metres, tilt from vertical in degrees). `approach` = desired finger direction
+    (unit vector, default straight down); joint limits enforced by clipping."""
     q = np.clip(np.asarray(q_init, float)[:5].copy(), LIM[:, 0], LIM[:, 1])
     q_prev = q.copy()
     for _ in range(iters):
-        r = residual(q, target, down_w, heading, heading_w, q_prev, reg_w)
+        r = residual(q, target, down_w, heading, heading_w, q_prev, reg_w, approach)
         J = np.zeros((len(r), 5)); eps = 1e-5
         for j in range(5):
             dq = np.zeros(5); dq[j] = eps
-            J[:, j] = (residual(q + dq, target, down_w, heading, heading_w, q_prev, reg_w) - r) / eps
+            J[:, j] = (residual(q + dq, target, down_w, heading, heading_w, q_prev, reg_w, approach) - r) / eps
         step = np.linalg.solve(J.T @ J + damping * np.eye(5), -J.T @ r)
         q = np.clip(q + np.clip(step, -0.3, 0.3), LIM[:, 0], LIM[:, 1])
         if np.linalg.norm(step) < 1e-6:

@@ -51,3 +51,6 @@ sim/02_scene/real_episodes/
 # sim: the recorded sim dataset lives on the Hub (timzwu/so101_blocks_sim, private); raw side clips are stitched into the reel
 sim/03_sim_demos/so101_blocks_sim/
 sim/03_sim_demos/so101_blocks_sim_extras/*.mp4
+sim/04_real_evals/trials/
+sim/05_sim_demos_v2/so101_blocks_sim_v2/
+sim/05_sim_demos_v2/so101_blocks_sim_v2_extras/*.mp4

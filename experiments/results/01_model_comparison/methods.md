@@ -53,7 +53,7 @@ modal run experiments/tools/modal_train.py::pull --job-name <job> --dest experim
 
 # evaluate: ACT locally; VLAs through the stop-and-go client, either on the Mac or against a policy server on a GPU
 python experiments/tools/eval.py --mode local --name act100k_pair --combos red:left,blue:right --policy experiments/checkpoints/<act-job>
-python experiments/tools/eval.py --mode sync  --name smolvla100_pair --combos red:left,blue:right --policy experiments/checkpoints/<smolvla-job> --camera-rename top=camera1,wrist=camera2
+python experiments/tools/eval.py --mode sync --name smolvla100_pair --policy-type smolvla --combos red:left,blue:right --policy experiments/checkpoints/<smolvla-job> --camera-rename top=camera1,wrist=camera2
 modal run experiments/tools/modal_policy_server.py --minutes 60 --gpu L40S      # prints host:port; billed for the whole window
 python experiments/tools/eval.py --mode sync  --name pi05full_pair --combos red:left,blue:right --policy-type pi05 --policy /outputs/<job>/checkpoints/last/pretrained_model --server <host:port> --record-dir experiments/results/trials
 python experiments/tools/eval.py --summary experiments/results/01_model_comparison/pi05full_pair.csv

@@ -52,6 +52,41 @@ def mat_texture() -> str:
     im.save(path, optimize=True)
     return path
 
+def mat_texture_photo(frames_glob: str = os.path.join(HERE, "..", "02_scene", "real_episodes", "first_*.jpg")) -> str:
+    """The mat as the real overhead camera sees it: a per-pixel median over the real episodes' first frames (the block
+    moves between episodes, so it vanishes; the arm and bowls are static and are excluded by region), warped into the
+    texture's frame through rig.px_to_world, with the mat outside the camera's view tiled from a clean patch. Real
+    tape, real stickers, real grid, real colours: the appearance the policy will see on the arm."""
+    import glob
+    import numpy as np
+    files = sorted(glob.glob(frames_glob))
+    assert len(files) >= 10, f"need the real first frames (export_grasps.py), found {len(files)}"
+    stack = np.stack([np.asarray(Image.open(f).convert("RGB")) for f in files]).astype(np.uint8)
+    med = np.median(stack, axis=0).astype(np.uint8)
+    # a clean mat patch (grid only): the strip above the zone, between the bowls, tiled over the whole texture
+    patch = med[4:72, 200:460]
+    ppx = PPM / (rig.PX_PER_CM * 100)                       # texture pixels per image pixel
+    patch_big = np.asarray(Image.fromarray(patch).resize((int(patch.shape[1] * ppx), int(patch.shape[0] * ppx)), Image.BICUBIC))
+    reps = (H // patch_big.shape[0] + 2, W // patch_big.shape[1] + 2, 1)
+    tex = np.tile(patch_big, reps)[:H, :W].copy()
+    # the taped zone, tape included, pasted at its true place (the bowls and the arm's base lie outside these pixels)
+    u0, u1, v0, v1 = 186, 474, 76, 355
+    region = med[v0:v1, u0:u1].copy()
+    # the arm at rest reaches into the zone's bottom rows in every real frame (image u 286-376, v 330-355): replace those
+    # pixels with the same rows from further right, plain tape band and grid, so the arm is not baked into the mat
+    region[330 - v0:339 - v0, 286 - u0:376 - u0] = region[330 - v0:339 - v0, 380 - u0:470 - u0]   # mat rows: the same rows further right
+    region[339 - v0:355 - v0, 286 - u0:376 - u0] = np.array([18, 18, 20], np.uint8)                # tape rows: the tape's own colour
+    x_top, y_left = rig.px_to_world(u0, v0)                # world coords of the region's image top-left corner
+    col0, row0 = to_px(x_top, y_left)                       # texture position of that corner
+    rw, rh = int(round((u1 - u0) * ppx)), int(round((v1 - v0) * ppx))
+    region_big = np.asarray(Image.fromarray(region).resize((rw, rh), Image.BICUBIC))
+    r0, c0 = int(round(row0)), int(round(col0))
+    tex[r0:r0 + rh, c0:c0 + rw] = region_big[: max(0, min(rh, H - r0)), : max(0, min(rw, W - c0))]
+    path = os.path.join(OUT, "mat.png")
+    Image.fromarray(tex).save(path, optimize=True)
+    return path
+
+
 def mat_usda() -> str:
     """A thin box, top face at z=0 carrying the texture; triangle-mesh static collider."""
     t = rig.MAT_THICKNESS
@@ -115,6 +150,8 @@ def Xform "Mat"
             {{
                 uniform token info:id = "UsdUVTexture"
                 asset inputs:file = @./mat.png@
+                float4 inputs:scale = (1, 1, 1, 1)
+                float4 inputs:bias = (0, 0, 0, 0)
                 float2 inputs:st.connect = </Mat/Looks/MatMaterial/Reader.outputs:result>
                 token inputs:wrapS = "clamp"
                 token inputs:wrapT = "clamp"
@@ -198,7 +235,11 @@ def Xform "Bowl"
     return path
 
 if __name__ == "__main__":
-    print(mat_texture(), f"{W}x{H}")
+    import sys
+    if "--drawn" in sys.argv:
+        print(mat_texture(), f"{W}x{H}")
+    else:
+        print(mat_texture_photo(), f"{W}x{H} (photo-based; --drawn for the synthetic grid)")
     print(mat_usda())
     for name, (_, _, rgb) in rig.BOWLS.items():
         print(bowl_usda(name, rgb))

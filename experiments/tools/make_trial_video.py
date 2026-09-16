@@ -22,10 +22,11 @@ ap.add_argument("--trials", default="", help='comma list of trial positions to i
 ap.add_argument("--speed", type=int, default=10)
 ap.add_argument("--fps", type=int, default=30)
 ap.add_argument("--out", default="")
+ap.add_argument("--results-dir", default="", help="folder holding <name>.csv and trials/ (default: experiments/results, searched recursively)")
 ap.add_argument("--thinking", action="store_true", help="llm trials: hold the frame during each call's logged thinking time (true Nx throughout, from <name>.calls.jsonl)")
 args = ap.parse_args()
 
-RES = ROOT.parent / "results"
+RES = Path(args.results_dir).resolve() if args.results_dir else ROOT.parent / "results"
 hits = sorted(RES.glob(f"*/{args.name}.csv")) + sorted(RES.glob(f"{args.name}.csv"))
 if not hits:
     sys.exit(f"[video] no {args.name}.csv under {RES}")

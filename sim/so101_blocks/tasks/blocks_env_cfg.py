@@ -233,6 +233,28 @@ def _look_at(eye, target):
     return np.stack([x, y, z], axis=1)
 
 
+def randomize_appearance(env, env_ids, mat_scale=(0.75, 1.25), tint=0.08, block_jitter=0.12, bowl_jitter=0.12):
+    """Mat texture brightness and tint (UsdUVTexture inputs:scale), block and bowl diffuse colours, on every reset."""
+    stage = get_current_stage()
+    u = lambda lo, hi: float(math_utils.sample_uniform(lo, hi, (1,), device="cpu").item())
+    with Sdf.ChangeBlock():
+        for prim in stage.Traverse():
+            path = prim.GetPath().pathString
+            if path.endswith("/Mat/Looks/MatMaterial/Texture"):
+                k = u(*mat_scale); t = u(-tint, tint)
+                attr = prim.GetAttribute("inputs:scale")            # declared in mat.usda; creating it inside a ChangeBlock fails
+                if attr.IsValid():
+                    attr.Set(Gf.Vec4f(k * (1 + t), k, k * (1 - t), 1.0))
+            elif "/Block" in path and path.endswith("/Shader") or path.endswith("/BowlMaterial/Surface"):
+                attr = prim.GetAttribute("inputs:diffuseColor")
+                if attr.IsValid() and attr.Get() is not None:
+                    base = attr.GetCustomDataByKey("base") or tuple(attr.Get())
+                    if attr.GetCustomDataByKey("base") is None:
+                        attr.SetCustomDataByKey("base", tuple(base))
+                    j = block_jitter if "/Block" in path else bowl_jitter
+                    attr.Set(Gf.Vec3f(*[min(1.0, max(0.0, c * u(1 - j, 1 + j))) for c in base]))
+
+
 @configclass
 class BlocksDRSceneCfg(BlocksSceneCfg):
     # the dataset cameras, as in BlocksSceneCfg but rgb only (depth / segmentation are never recorded)
@@ -269,8 +291,9 @@ class BlocksDRObservationsCfg(ObservationsCfg):
 class BlocksDREventCfg(EventCfg):
     camera_top_pose = EventTerm(func=randomize_camera_pose, mode="reset",
                                 params={"prim_path_pattern": "{ENV_REGEX_NS}/camera_top",
-                                        "pos_range": {"x": (-0.02, 0.02), "y": (-0.02, 0.02), "z": (-0.02, 0.02)},
-                                        "rot_range": {"roll": (-0.05, 0.05), "pitch": (-0.05, 0.05), "yaw": (-0.05, 0.05)}})
+                                        "pos_range": {"x": (-0.03, 0.03), "y": (-0.03, 0.03), "z": (-0.03, 0.03)},
+                                        "rot_range": {"roll": (-0.09, 0.09), "pitch": (-0.09, 0.09), "yaw": (-0.09, 0.09)}})   # ±3 cm, ±5 deg (v2)
+    appearance = EventTerm(func=randomize_appearance, mode="reset", params={})
     camera_top_fov = EventTerm(func=randomize_camera_focal_length, mode="reset",
                                params={"focal_length_range": (rig.TOP_CAM_FOCAL * 0.92, rig.TOP_CAM_FOCAL * 1.08), "asset_cfg": SceneEntityCfg("camera_top")})
     camera_wrist_fov = EventTerm(func=randomize_camera_focal_length, mode="reset",
@@ -284,3 +307,37 @@ class BlocksDREnvCfg(BlocksEnvCfg):
     scene: BlocksDRSceneCfg = BlocksDRSceneCfg()
     observations: BlocksDRObservationsCfg = BlocksDRObservationsCfg()
     events: BlocksDREventCfg = BlocksDREventCfg()
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# Evaluation variant: the nominal (non-randomized) scene with rgb-only cameras, so each step renders half as much.
+# ---------------------------------------------------------------------------------------------------------------------
+@configclass
+class BlocksEvalSceneCfg(BlocksSceneCfg):
+    camera_top = camera_base.replace(prim_path="{ENV_REGEX_NS}/camera_top", data_types=["rgb"])
+    camera_top.offset = TiledCameraCfg.OffsetCfg(pos=(rig.TOP_CAM_XY[0], rig.TOP_CAM_XY[1], rig.TOP_CAM_HEIGHT),
+                                                 rot=_quat((0.0, 0.0, -90.0)), convention="opengl")
+    camera_wrist = camera_base.replace(prim_path="{ENV_REGEX_NS}/Robot/gripper/gripper_cam", data_types=["rgb"])
+    camera_wrist.spawn = sim_utils.PinholeCameraCfg(projection_type="pinhole", focal_length=rig.WRIST_CAM_FOCAL,
+                                                    horizontal_aperture=rig.TOP_CAM_APERTURE, clipping_range=(0.01, 20.0))
+    camera_wrist.offset = TiledCameraCfg.OffsetCfg(pos=rig.WRIST_CAM_POS, rot=_wrist_quat(), convention="opengl")
+
+
+@configclass
+class BlocksEvalObservationsCfg(ObservationsCfg):
+    @configclass
+    class VisualCfg(ObsGroup):
+        rgb_top = ObsTerm(func=image, params={"sensor_cfg": SceneEntityCfg("camera_top"), "data_type": "rgb", "normalize": False})
+        rgb_wrist = ObsTerm(func=image, params={"sensor_cfg": SceneEntityCfg("camera_wrist"), "data_type": "rgb", "normalize": False})
+
+        def __post_init__(self):
+            self.enable_corruption = False
+            self.concatenate_terms = False
+
+    visual: VisualCfg = VisualCfg()
+
+
+@configclass
+class BlocksEvalEnvCfg(BlocksEnvCfg):
+    scene: BlocksEvalSceneCfg = BlocksEvalSceneCfg()
+    observations: BlocksEvalObservationsCfg = BlocksEvalObservationsCfg()

@@ -46,6 +46,8 @@ def Xform "Mat"
             {
                 uniform token info:id = "UsdUVTexture"
                 asset inputs:file = @./mat.png@
+                float4 inputs:scale = (1, 1, 1, 1)
+                float4 inputs:bias = (0, 0, 0, 0)
                 float2 inputs:st.connect = </Mat/Looks/MatMaterial/Reader.outputs:result>
                 token inputs:wrapS = "clamp"
                 token inputs:wrapT = "clamp"

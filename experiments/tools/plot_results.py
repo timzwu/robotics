@@ -23,7 +23,9 @@ OUT = RES / "01_model_comparison"
 BG = "#fbfbf9"
 STAGE = {"no_reach": 0, "no_move": 0, "touch_no_grip": 1, "timeout": 1, "drop": 2, "collision": 2, "wrong_bowl": 2, "other": 2}
 # Trials whose notes place them in a different stage than their failure bucket (read the CSV notes before adding one).
-STAGE_OVERRIDES = {("smolvla_wristonly_pair", 3): 2}  # "grasps at last chunk" then timed out
+STAGE_OVERRIDES = {("smolvla_wristonly_pair", 3): 2,   # "grasps at last chunk" then timed out
+                   ("smolvla_simreal_pair", 2): 2,     # gripped, dropped, was recovering toward the bowl when the 30 s ran out
+                   ("smolvla_simreal_75_25_pair", 3): 2}  # "barely picks up but out of motion time"
 STAGE_COLORS = ["#e8e8e3", "#c6d4ea", "#7fa3d6", "#2b57a5"]
 STAGE_NAMES = ["no contact with block", "contact without grip", "grip without successful placement", "success"]
 

@@ -47,3 +47,12 @@ verdict comes from that file, not the exit code, because Isaac Sim's python exit
 - Everything installed on the VM is lost at terminate: the ~20 GB image pull (~3 min) and the apt step repeat each session.
   A Lambda persistent filesystem in the region would keep the Docker image and caches; worth it from step 2 on.
 - The robot mesh is yellow in the workshop USD; the real arm is white. Colour randomization covers this in step 3.
+
+## Modal, retested (Sept 15, `sim/tools/modal_isaac_smoke2.py`)
+Modal's own Isaac Lab example renders a video on an L40S from NVIDIA's `isaac-lab` container, so the same smoke test was
+run inside that container (`isaac-lab:2.3.2`, pulled from NGC, entrypoint cleared) rather than a pip install. Result:
+Vulkan now creates the GPU device (Isaac Sim starts in 28 s and reports "Graphics API: Vulkan"), and the first render
+submission fails with `ERROR_DEVICE_LOST`, after which no frame is produced. So the sandbox exposes the GPU to Vulkan
+for device creation but not for graphics work; CUDA is unaffected. A `vulkaninfo` from a slim image is not a valid
+test (it also fails on a host where the container renders). Not tried: the `3.0.0-beta2-post1` image the example uses.
+Two runs, ≈ $1.
