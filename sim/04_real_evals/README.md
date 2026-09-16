@@ -35,10 +35,9 @@ from physics proxies rather than the human labels used on the arm.
 
 ## Videos and data
 
-- [Co-trained v2 on the physical arm, 10×](smolvla_simreal_v2_pair_10x.mp4)
-- [Co-trained v2 in the simulator, 10×](smolvla_simreal_v2_simeval_10x.mp4)
-- [Sim-only v1 on the physical arm, 10×](smolvla_sim_pair_10x.mp4)
-- [Co-trained v1 on the physical arm, 10×](smolvla_simreal_pair_10x.mp4)
+- [Co-trained v2 on the physical arm and in simulation, 10×](smolvla_simreal_v2_real_and_sim_10x-publication-copy.mp4)
+- [Sim-only v1 on the physical arm, 10×](smolvla_sim_pair_10x-publication-copy.mp4)
+- [Co-trained v1 on the physical arm, 10×](smolvla_simreal_pair_10x-publication-copy.mp4)
 
 [Methods](methods.md) · [All 220 trial outcomes](all_trials_sim.csv) ·
 [Training log](../../experiments/results/training_runs.md) ·

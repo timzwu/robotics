@@ -54,3 +54,27 @@ sim/03_sim_demos/so101_blocks_sim_extras/*.mp4
 sim/04_real_evals/trials/
 sim/05_sim_demos_v2/so101_blocks_sim_v2/
 sim/05_sim_demos_v2/so101_blocks_sim_v2_extras/*.mp4
+
+# Only reviewed publication videos may be tracked. Keep source footage local.
+*.mp4
+*.mov
+*.avi
+*.webm
+*.mkv
+*.m4v
+*.MP4
+*.MOV
+!/experiments/results/01_model_comparison/pi05full_pair_10x-publication-copy.mp4
+!/experiments/results/teleop_50eps_10x-publication-copy.mp4
+!/sim/03_sim_demos/sim_demos_10x.mp4
+!/sim/03_sim_demos/sim_demos_side_10x.mp4
+!/sim/04_real_evals/smolvla_real_simeval_10x.mp4
+!/sim/04_real_evals/smolvla_sim_pair_10x-publication-copy.mp4
+!/sim/04_real_evals/smolvla_sim_simeval_10x.mp4
+!/sim/04_real_evals/smolvla_sim_v2_simeval_10x.mp4
+!/sim/04_real_evals/smolvla_simreal_pair_10x-publication-copy.mp4
+!/sim/04_real_evals/smolvla_simreal_simeval_10x.mp4
+!/sim/04_real_evals/smolvla_simreal_v2_real_and_sim_10x-publication-copy.mp4
+!/sim/04_real_evals/smolvla_simreal_v2_simeval_10x.mp4
+!/sim/05_sim_demos_v2/sim_demos_v2_10x.mp4
+!/sim/05_sim_demos_v2/sim_demos_v2_side_10x.mp4

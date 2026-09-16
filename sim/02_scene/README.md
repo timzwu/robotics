@@ -17,5 +17,4 @@ aligned closely, but none of the three replays lifted the block. Visual and join
 establish reliable contact behavior. The subsequent demonstration script planned grasps from known
 object positions in the simulator.
 
-[Methods and measurements](methods.md) · [Scene code](../so101_blocks/) ·
-[Overhead replay](replay_ep0_compare_top.mp4) · [Wrist replay](replay_ep0_compare_wrist.mp4)
+[Methods and measurements](methods.md) · [Scene code](../so101_blocks/)

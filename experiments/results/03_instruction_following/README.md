@@ -18,4 +18,4 @@ To repeat the test, use the [evaluation command](../01_model_comparison/methods.
 omitted and a new run name and CSV. ACT is omitted because it does not take a language instruction.
 
 [SmolVLA notes](smolvla100_all4.md) · [π0.5 notes](../01_model_comparison/pi05full.md) ·
-[Control notes](../01_model_comparison/pi05.md) · [π0.5 reel](pi05full_all4_10x.mp4)
+[Control notes](../01_model_comparison/pi05.md)

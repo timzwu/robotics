@@ -23,7 +23,7 @@ compares robot policies and language-model control on an SO-101 arm.
 ## Working here
 
 - [`tools/`](tools/) holds the recording, training, evaluation, plotting, and video scripts.
-- [`results/`](results/) holds experiment write-ups, CSVs, charts, and final reels.
+- [`results/`](results/) holds experiment write-ups, CSVs, charts, and publication video copies.
 - `checkpoints/` and `results/trials/` hold downloaded weights and raw footage; both are gitignored.
 
 Start with the [environment and hardware setup](../notes/setup.md), then the method for the experiment you want

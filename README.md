@@ -63,7 +63,8 @@ or success.
 | [`scripts/`](scripts/) | Shell wrappers for long commands (teleop). |
 | [`sim/`](sim/) | Post #1: the Isaac Sim / Isaac Lab pipeline (`tools/`, `so101_blocks/`), the scene, the scripted demonstrations, the fine-tunes and both evaluations, one numbered folder per step. |
 
-Trial footage: the final reels are in git; the raw per-trial videos are not.
+Videos: only allowlisted publication copies and simulation-only reels are tracked. Untreated real-camera
+recordings and raw trial footage stay local.
 
 ## Setup
 

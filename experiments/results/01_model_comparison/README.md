@@ -22,4 +22,4 @@ Two controls are retained: [ACT with shorter training](act100_pair.md) scored 1/
 so it does not isolate the effect of unfreezing.
 
 [Methods and commands](methods.md) · [Detailed results](comparison_wk1.md) ·
-[Comparison chart](model_comparison.png) · [Stages reached](progress_by_model.png) · [π0.5 reel](pi05full_pair_10x.mp4)
+[Comparison chart](model_comparison.png) · [Stages reached](progress_by_model.png) · [π0.5 reel](pi05full_pair_10x-publication-copy.mp4)

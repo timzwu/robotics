@@ -17,5 +17,5 @@ excluded from that budget. Its calibrated interface and prompt also differ from 
 [Results and observations](astra.md) · [Control loop and run instructions](methods.md) ·
 [Prompt](prompt_plain.txt) · [Run 2 call log](astra_pair.calls.jsonl) · [Position map](failure_geography_llm.png)
 
-[Full reel](astra_pair_10x_with_thinking.mp4) · [Annotated highlights](astra_pair_feed_highlights_10x_true_time.mp4)
+Untreated recordings are retained locally; publication copies are not yet included.
 (both at 10× speed, including inference pauses).
