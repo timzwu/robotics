@@ -22,11 +22,11 @@ PATHS = {"smolvla100_pair": ROOT / "experiments/results/01_model_comparison/smol
 SIM_OF = {"smolvla100_pair": "smolvla_real_simeval", "smolvla_sim_pair": "smolvla_sim_simeval", "smolvla_simreal_pair": "smolvla_simreal_simeval",
           "smolvla_sim_v2_pair": "smolvla_sim_v2_simeval", "smolvla_simreal_v2_pair": "smolvla_simreal_v2_simeval"}
 pr.load = lambda name: list(csv.DictReader(open(PATHS[name]))) if name in PATHS and PATHS[name].exists() else []
-ALL_CONDS = [("smolvla100_pair", "A · real\n100 teleop demos", "#2b57a5"), ("smolvla_sim_pair", "C · sim only\n100 scripted sim demos", "#c98a2b"),
-             ("smolvla_simreal_pair", "D · sim + real\n100 sim + 100 real", "#5a9e6f"),
-             ("smolvla_sim_v2_pair", "C2 · sim v2 only\n100 sim demos, 2nd recipe", "#e0b45a"),
-             ("smolvla_simreal_v2_pair", "D2 · sim v2 + real\n100 sim v2 + 100 real", "#8fc79a"),
-             ("smolvla_simreal_75_25_pair", "75 / 25 real : sim\n100 real + 33 sim", "#7a6fb0")]
+ALL_CONDS = [("smolvla100_pair", "Real only\n100 teleop demos", "#2b57a5"), ("smolvla_sim_pair", "Sim v1 only\n100 scripted sim demos", "#c98a2b"),
+             ("smolvla_simreal_pair", "Co-trained v1\n100 sim + 100 real", "#5a9e6f"),
+             ("smolvla_sim_v2_pair", "Sim v2 only\n100 sim demos", "#e0b45a"),
+             ("smolvla_simreal_v2_pair", "Co-trained v2\n100 sim v2 + 100 real", "#8fc79a"),
+             ("smolvla_simreal_75_25_pair", "75 / 25 real : sim\n100 real + 33 sim v1", "#7a6fb0")]
 # round 1 (A, C, D) and round 2 (the v2 demonstrations and the 75/25 split, with A and D as the reference bars) are
 # charted separately: they are separate sections of the write-up. Set by `set_round()` below.
 ROUND1 = ["smolvla100_pair", "smolvla_sim_pair", "smolvla_simreal_pair"]
@@ -65,6 +65,7 @@ def combined_chart(out: Path) -> None:
         for j, (run, hatch, lab) in enumerate(((SIM_OF.get(name, ""), "//", "in the simulator"), (name, None, "on the real arm"))):
             rows = pr.load(run)
             if not rows:
+                ax.text(i + (j - 0.5) * (w + 0.04), 0.025, "Not run", ha="center", fontsize=9, rotation=90)
                 continue
             k = sum(int(r["success"]) for r in rows); n = len(rows); lo, hi = pr.wilson(k, n); x = i + (j - 0.5) * (w + 0.04)
             ax.bar(x, k / n, width=w, color=col if j else "none", edgecolor=col, hatch=hatch, linewidth=1.6, label=lab if i == 0 else None)

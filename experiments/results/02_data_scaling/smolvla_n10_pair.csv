@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+smolvla_n10_pair,1,red,left,put the red block in the left bowl,0,no_reach,65.8,2026-09-10T11:44:46,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,2,blue,right,put the blue block in the right bowl,0,drop,63.7,2026-09-10T11:46:16,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,3,red,left,put the red block in the left bowl,0,no_reach,63.6,2026-09-10T11:47:56,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,4,blue,right,put the blue block in the right bowl,0,no_reach,63.5,2026-09-10T11:51:04,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,5,red,left,put the red block in the left bowl,0,touch_no_grip,62.7,2026-09-10T11:52:41,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,6,blue,right,put the blue block in the right bowl,0,no_reach,62.1,2026-09-10T11:54:48,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,7,red,left,put the red block in the left bowl,0,no_reach,62.0,2026-09-10T11:56:26,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,8,blue,right,put the blue block in the right bowl,0,no_reach,62.8,2026-09-10T11:57:53,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,9,red,left,put the red block in the left bowl,0,touch_no_grip,62.5,2026-09-10T11:59:22,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,10,blue,right,put the blue block in the right bowl,0,no_reach,62.6,2026-09-10T12:01:45,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,11,red,left,put the red block in the left bowl,0,no_reach,66.3,2026-09-10T19:17:24,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,12,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.6,2026-09-10T19:19:20,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,13,red,left,put the red block in the left bowl,0,no_reach,63.2,2026-09-10T19:20:48,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,62.3,2026-09-10T19:22:38,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,15,red,left,put the red block in the left bowl,0,no_reach,61.8,2026-09-10T19:24:18,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,16,blue,right,put the blue block in the right bowl,0,no_reach,62.1,2026-09-10T19:25:46,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,17,red,left,put the red block in the left bowl,0,no_reach,62.2,2026-09-10T19:27:19,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,18,blue,right,put the blue block in the right bowl,0,no_reach,63.7,2026-09-10T19:28:47,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,19,red,left,put the red block in the left bowl,0,no_reach,62.4,2026-09-10T19:30:08,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync
+smolvla_n10_pair,20,blue,right,put the blue block in the right bowl,0,no_reach,62.6,2026-09-10T19:31:36,experiments/checkpoints/smolvla_so101_blocks_n10_s0,sync

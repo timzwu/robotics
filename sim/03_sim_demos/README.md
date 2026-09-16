@@ -10,11 +10,13 @@ move through hover, grasp, lift, placement, and return.
 | Median episode length | 12.2 seconds |
 | Recorded frames | 36,771 |
 | Recording time | 59 minutes on an A10 |
-| Recording compute cost | About $1.30 |
+| Recording compute cost | About $1.30 for recording alone |
 
 Camera images, observed joints, commanded joints, and task instructions were saved in LeRobot format.
-Camera pose, lighting, and robot color varied between episodes. Approaches and gripper openings were
+Overhead-camera pose, both cameras’ focal lengths, lighting, and robot color varied between episodes. Approaches and gripper openings were
 uniform, and there were no deliberate recovery attempts.
+
+The article rounds recording compute to about $2.
 
 These demonstrations trained the sim-only and co-trained v1 policies. Their shorter, more uniform
 movements motivated the [sim v2 changes](../05_sim_demos_v2/).

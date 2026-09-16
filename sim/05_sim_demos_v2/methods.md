@@ -1,4 +1,4 @@
-# Methods · simulated demonstrations, second recipe
+# Methods · simulated demonstrations, sim v2
 
 Same pipeline as `../03_sim_demos/methods.md` (workshop sim container, Isaac Lab 2.3.2, LeRobot 0.4.3, environment
 `So101-Blocks-DR-v0`, `record_demos.py` on a Lambda A10). What changed, by axis:
@@ -8,7 +8,7 @@ Same pipeline as `../03_sim_demos/methods.md` (workshop sim container, Isaac Lab
 perpendicular to the jaw axis so the fingers pass beside the block instead of knocking it; the jaws close on nothing,
 the arm lifts, reopens, hops to a fresh hover and grasps again. Half the retries also turn the jaw heading 90°. The
 episode is kept only if the second grasp puts the block in the bowl. In the real dataset a few teleop episodes contain
-accidental retries; v1 had none.
+deliberately included retries; v1 had none.
 
 ## 2. Varied grasps
 - Approach direction tilted up to 25° from vertical, random per episode (v1: straight down).
@@ -21,11 +21,11 @@ accidental retries; v1 had none.
 - The mat is textured from the real overhead frames: the median of the first frames of the real episodes, its tape
   square, stickers and bowl shadows pasted at their measured positions (`make_assets.py mat_texture_photo`;
   `--drawn` gives the v1 synthetic mat).
-- Per reset: block and bowl diffuse colour jittered around their measured colours, mat tint ±, overhead and wrist camera
-  poses ±3 cm / ±5° (v1: ±2 cm / ±3°), focal ±8–10%, robot colour, dome and lamp as before.
+- Per reset: block and bowl diffuse colour jittered around their measured colours, mat tint ±, overhead camera
+  pose ±3 cm / ±5° (v1: ±2 cm / ±3°), both cameras’ focal lengths ±8–10%, robot colour, dome and lamp as before.
 
 ## 4. Block positions
-30% of episodes place the block within 1.2 cm of a random sticker (the twenty evaluation spots); the rest uniform inside
+30% of episodes place the block within ±1.2 cm on each axis of a random sticker (the twenty evaluation spots); the rest uniform inside
 the tape's inner edge minus half a block (v1 kept a 5 cm margin, so the edges were never seen). The logged position is
 the settled pose after the drop; five of 269 attempts bounced outside the tape and two of those were kept.
 
@@ -67,7 +67,7 @@ Joint ranges against the real dataset (observation.state, degrees; gripper 0–1
 | gripper | 1 to 35 | 1 to 37 |
 
 The wrist roll now covers more than the real range (the real operator never rolled past 45°) and the gripper opening
-matches. Verified on the laptop with LeRobot 0.6.1: 200 episodes, 82,126 frames, two tasks 100/100, 480×640 images decode.
+is closer to the real range. Verified on the laptop with LeRobot 0.6.1: 200 episodes, 82,126 frames, two tasks 100/100, 480×640 images decode.
 
 ## Fine-tunes on this data (Sept 16)
 Same recipe as C and D (`lerobot/smolvla_base`, 20,000 × 64, cameras renamed top→camera1 wrist→camera2, L40S):

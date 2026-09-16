@@ -1,8 +1,8 @@
 # Methods · the scene
 
 ## What is built
-`sim/so101_blocks/` is an Isaac Lab environment (`So101-Blocks-v0`) of the real rig: the SO-101 on an A2 cutting mat,
-the taped 20 cm zone with the 20 numbered stickers at their measured pixel positions, the two bowls, a red and a blue
+`sim/so101_blocks/` is an Isaac Lab environment (`So101-Blocks-v0`) of the real rig: the SO-101 on a cutting mat,
+the taped 24.3 cm zone with the 20 numbered stickers at their measured pixel positions, the two bowls, a red and a blue
 block, an overhead camera and a wrist camera at 640×480, 30 Hz control (120 Hz physics, decimation 4). It reuses NVIDIA's
 workshop package for the robot asset (actuator gains, joint limits) and the observation/recording helpers, so the
 workshop's LeRobot recorder writes `observation.images.top` / `.wrist` and `observation.state` in the real dataset's
@@ -60,8 +60,7 @@ shuts the simulator down in a `finally` (Kit otherwise keeps the process alive a
 ## Results
 **Scene.** Both cameras render at 640×480 in 17 s per scene; the overhead frame matches the real one to a few pixels on
 the tape square and the stickers (`compare_top.png`); a block placed on sticker 1 renders 5 px from the sticker's
-measured pixel (the block's top face is 2.5 cm nearer the camera). Bowls appear larger and further out than the real
-ones: the real camera is higher than the 45 cm estimate.
+measured pixel (the block's top face is 2.5 cm nearer the camera). The initial render used an estimated camera height; the measured scene uses 41.3 cm.
 
 **Replay of real episode 0** (777 frames, 30 Hz, `replay.json`): the simulated arm tracks the real joint trajectory
 with an RMS error of 0.05–1.2° per joint (max 5°, wrist roll and gripper), 68 s for the episode. No frame is clipped.
@@ -80,9 +79,6 @@ arrive within 0.4–1.6 cm of the block in x and y, which is about the operator'
 lifts the block: in episode 0 the fingertips come down on its top face, in episode 5 they close around it but it is
 pushed rather than carried, in episode 7 they close beside it. That is the expected limit of a blind replay at 1 cm,
 and it is not what the experiment needs (the scripted agent plans its grasps in sim). The block is a measured 1 inch
-cube, so the residual is the placement: the block's position comes from its pixel in the first frame, and 1 cm is the
-combined error of that detection, the map and where the operator actually closed on it.
+cube. The remaining error can include pixel detection, the coordinate map, grasp alignment, and simulated contact. These replays do not isolate their contributions.
 
-Files: `scene.json`, `sim_top.png`, `sim_wrist.png`, `compare_top.png`, `compare_wrist.png` (measured map),
-`replay.json` / `replay.npz` (episode 0: commanded vs achieved joints, fingertip positions), `replay_ep05.json`,
-`replay_ep07.json`, `replay_ep0_compare_{top,wrist}.mp4`, `replay_ep*_grasp_*.png` (the grasp moment, sim vs real).
+Files: `sim_top.png`, `sim_wrist.png`, `compare_top.png`, `compare_wrist.png` (measured map), `replay_ep0_compare_top-publication-copy.mp4`, `replay_ep*_grasp_*.png` (the grasp moment, sim vs real).

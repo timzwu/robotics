@@ -23,10 +23,13 @@ parser.add_argument("--max-attempts", type=int, default=4, help="re-rolls per ep
 parser.add_argument("--recovery-share", type=float, default=0.15, help="share of episodes that miss first, reopen and re-grasp")
 AppLauncher.add_app_launcher_args(parser)
 args = parser.parse_args()
+from pathlib import Path
+if Path(args.out).exists():
+    parser.error(f"output already exists: {args.out}; choose a fresh --out directory")
 args.enable_cameras = True
 app = AppLauncher(args).app
 
-import json, os, sys, time, math, shutil
+import json, os, sys, time, math
 import numpy as np, torch, gymnasium as gym
 import isaaclab_tasks  # noqa: F401
 from isaaclab_tasks.utils import parse_env_cfg
@@ -130,8 +133,6 @@ def main():
     robot = env.unwrapped.scene["robot"]
     blocks = {"red": env.unwrapped.scene["block_red"], "blue": env.unwrapped.scene["block_blue"]}
     origins = env.unwrapped.scene.env_origins
-    if os.path.exists(args.out):
-        shutil.rmtree(args.out)
     ds = LeRobotDataset.create(args.repo_id, fps=FPS, features=FEATURES, root=args.out, robot_type="so_follower", use_videos=True, image_writer_threads=4)   # the real dataset says so_follower
     os.makedirs(f"{args.out}_extras", exist_ok=True)
     global DS, T0; DS, T0 = ds, t0

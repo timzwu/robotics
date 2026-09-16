@@ -20,7 +20,7 @@ compares robot policies and language-model control on an SO-101 arm.
 | [Language-model control](results/06_general_llm/) | Can Astra control the arm through images and motion tools without demonstrations? |
 
 [Setup, evaluation protocol, and commands](results/01_model_comparison/methods.md) ·
-[Training log](results/training_runs.md) · [Trial data](results/all_trials_wk1.csv)
+[Training runs](results/training_runs.md) · [Trial outcomes](results/all_trials_wk1.csv)
 
 ## Working here
 

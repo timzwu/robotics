@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+astra_pair,1,red,left,put the red block in the left bowl,1,,134.9,2026-09-13T00:02:12,gpt-6-astra,llm
+astra_pair,2,blue,right,put the blue block in the right bowl,1,,130.6,2026-09-13T00:05:13,gpt-6-astra,llm
+astra_pair,3,red,left,put the red block in the left bowl,1,,150.1,2026-09-13T00:08:38,gpt-6-astra,llm
+astra_pair,4,blue,right,put the blue block in the right bowl,1,,68.8,2026-09-13T00:10:12,gpt-6-astra,llm
+astra_pair,5,red,left,put the red block in the left bowl,1,,196.7,2026-09-13T00:13:55,gpt-6-astra,llm
+astra_pair,6,blue,right,put the blue block in the right bowl,1,,150.5,2026-09-13T00:16:43,gpt-6-astra,llm
+astra_pair,7,red,left,put the red block in the left bowl,1,,62.7,2026-09-13T00:18:10,gpt-6-astra,llm
+astra_pair,8,blue,right,put the blue block in the right bowl,1,,163.1,2026-09-13T00:21:32,gpt-6-astra,llm
+astra_pair,9,red,left,put the red block in the left bowl,1,,64.5,2026-09-13T00:23:02,gpt-6-astra,llm
+astra_pair,10,blue,right,put the blue block in the right bowl,0,timeout,208.6,2026-09-13T00:27:13,gpt-6-astra,llm
+astra_pair,11,red,left,put the red block in the left bowl,1,,101.4,2026-09-13T00:29:24,gpt-6-astra,llm
+astra_pair,12,blue,right,put the blue block in the right bowl,1,,126.0,2026-09-13T00:31:54,gpt-6-astra,llm
+astra_pair,13,red,left,put the red block in the left bowl,1,,150.4,2026-09-13T00:34:46,gpt-6-astra,llm
+astra_pair,14,blue,right,put the blue block in the right bowl,1,,135.0,2026-09-13T00:37:23,gpt-6-astra,llm
+astra_pair,15,red,left,put the red block in the left bowl,1,,61.0,2026-09-13T00:38:34,gpt-6-astra,llm
+astra_pair,16,blue,right,put the blue block in the right bowl,1,,76.3,2026-09-13T00:40:06,gpt-6-astra,llm
+astra_pair,17,red,left,put the red block in the left bowl,1,,76.0,2026-09-13T00:41:31,gpt-6-astra,llm
+astra_pair,18,blue,right,put the blue block in the right bowl,0,touch_no_grip,159.7,2026-09-13T00:46:44,gpt-6-astra,llm
+astra_pair,19,red,left,put the red block in the left bowl,0,touch_no_grip,229.2,2026-09-13T00:50:52,gpt-6-astra,llm
+astra_pair,20,blue,right,put the blue block in the right bowl,1,,77.2,2026-09-13T00:52:29,gpt-6-astra,llm

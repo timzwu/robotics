@@ -23,6 +23,9 @@ observation captured before the command with that command, as LeRobot's real rec
 it is not in the dataset. Verified: a 2-episode smoke dataset written by 0.4.3 loads in LeRobot 0.6.1 on the laptop.
 
 ## Commands
+
+These commands describe sim v1 at commit `2e631e0`. The current recorder generates sim v2; setting its recovery share to zero does not recreate v1.
+
 ```bash
 LAMBDA_YES=1 python3 sim/tools/lambda_vm.py launch --type gpu_1x_a10 --region us-east-1     # the A6000 was sold out
 scp -i ~/.ssh/lambda_ed25519 sim/tools/vm_session2.sh ubuntu@<ip>:~/ ; scp -r sim/so101_blocks sim/02_scene/real_episodes ubuntu@<ip>:~/
@@ -58,6 +61,6 @@ Joint ranges against the real dataset (observation.state, degrees; gripper 0–1
 | wrist roll | −54 to 51 | −139 to 45 |
 | gripper | 1 to 20 | 1 to 37 |
 
-The arm joints cover the real ranges; the wrist roll and the gripper opening are narrower in sim (the agent rolls only
+The arm joints span a subset of the real ranges; the wrist roll and the gripper opening are narrower in sim (the agent rolls only
 to align with the block and opens the jaws to 20), and the real operator bent the wrist further at times.
 Verified on the laptop with LeRobot 0.6.1: 100 episodes, 36,771 frames, two tasks 50/50, 480×640 images decode.

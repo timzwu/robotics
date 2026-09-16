@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+pi05_pair,1,red,left,put the red block in the left bowl,0,touch_no_grip,73.4,2026-09-12T17:19:05,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,2,blue,right,put the blue block in the right bowl,0,touch_no_grip,74.9,2026-09-12T17:20:36,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,3,red,left,put the red block in the left bowl,0,touch_no_grip,76.3,2026-09-12T17:22:21,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,4,blue,right,put the blue block in the right bowl,0,touch_no_grip,93.0,2026-09-12T17:24:16,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,5,red,left,put the red block in the left bowl,0,no_reach,75.6,2026-09-12T17:25:56,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,6,blue,right,put the blue block in the right bowl,0,no_reach,73.3,2026-09-12T17:27:54,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,7,red,left,put the red block in the left bowl,0,touch_no_grip,75.5,2026-09-12T17:29:30,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,8,blue,right,put the blue block in the right bowl,0,no_reach,74.9,2026-09-12T17:31:13,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,9,red,left,put the red block in the left bowl,1,,77.6,2026-09-12T17:33:54,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,10,blue,right,put the blue block in the right bowl,1,,75.0,2026-09-12T17:35:41,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,11,red,left,put the red block in the left bowl,0,touch_no_grip,74.0,2026-09-12T17:37:56,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,12,blue,right,put the blue block in the right bowl,1,,74.3,2026-09-12T17:39:40,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,13,red,left,put the red block in the left bowl,0,touch_no_grip,76.6,2026-09-12T17:41:21,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,73.5,2026-09-12T17:43:00,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,15,red,left,put the red block in the left bowl,1,,74.6,2026-09-12T17:44:59,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,16,blue,right,put the blue block in the right bowl,1,,74.4,2026-09-12T17:47:04,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,17,red,left,put the red block in the left bowl,0,no_reach,75.5,2026-09-12T17:48:33,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,18,blue,right,put the blue block in the right bowl,0,touch_no_grip,151.2,2026-09-12T17:53:57,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,19,red,left,put the red block in the left bowl,0,touch_no_grip,56.7,2026-09-12T17:55:08,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_pair,20,blue,right,put the blue block in the right bowl,0,touch_no_grip,57.0,2026-09-12T17:56:41,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync

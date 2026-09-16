@@ -62,7 +62,7 @@ class Policy:
         from PIL import Image
         from fastapi import HTTPException
         token = os.environ.get("POLICY_TOKEN", "")
-        if token and req.get("token") != token:
+        if not token or req.get("token") != token:
             raise HTTPException(status_code=403, detail="bad token")
         t0 = time.time()
         pol, pre, post = self.load(req["policy"], req.get("policy_type", "smolvla"))

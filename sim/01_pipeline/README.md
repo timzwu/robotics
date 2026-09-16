@@ -15,4 +15,4 @@ simulated a falling block, and rendered two camera views on a Lambda A6000.
 Isaac Sim 5.1 ran inside NVIDIA's Isaac Lab 2.3.2 container. This verified the physics and
 rendering pipeline; task setup and robot control followed in [scene calibration](../02_scene/).
 
-[Methods and setup](methods.md) · [Test results](smoke.json) · [Side view](so101_frame_side.png)
+[Methods and setup](methods.md) · [Side view](so101_frame_side.png)

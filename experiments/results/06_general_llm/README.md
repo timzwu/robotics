@@ -14,8 +14,8 @@ between runs, so the improvement cannot be attributed to wrist roll alone.
 The same 30 s motion budget applies as in the policy tests, but run 2 used a median 103 s of thinking per trial,
 excluded from that budget. Its calibrated interface and prompt also differ from the trained policies.
 
-[Results and observations](astra.md) · [Control loop and run instructions](methods.md) ·
-[Prompt](prompt_plain.txt) · [Run 2 call log](astra_pair.calls.jsonl) · [Position map](failure_geography_llm.png)
+[Control loop and run instructions](methods.md) ·
+[Prompt](prompt_plain.txt) · [Position map](failure_geography_llm.png)
 
 [Full reel](astra_pair_10x_with_thinking.mp4) · [Article highlights](astra_pair_feed_highlights_10x_true_time.mp4)
 (both at 10× speed, including inference pauses).

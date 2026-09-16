@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+smolvla_simreal_v2_pair,1,red,left,put the red block in the left bowl,0,touch_no_grip,63.8,2026-09-16T11:14:19,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,2,blue,right,put the blue block in the right bowl,1,,64.0,2026-09-16T11:15:47,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,3,red,left,put the red block in the left bowl,0,no_reach,64.1,2026-09-16T11:17:02,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,4,blue,right,put the blue block in the right bowl,1,,64.4,2026-09-16T11:18:23,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,5,red,left,put the red block in the left bowl,1,,64.0,2026-09-16T11:19:36,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,6,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.5,2026-09-16T11:21:01,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,7,red,left,put the red block in the left bowl,1,,64.9,2026-09-16T11:22:35,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,8,blue,right,put the blue block in the right bowl,0,no_reach,65.4,2026-09-16T11:23:54,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,9,red,left,put the red block in the left bowl,0,no_reach,65.1,2026-09-16T11:25:18,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,10,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.6,2026-09-16T11:26:53,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,11,red,left,put the red block in the left bowl,0,no_reach,66.1,2026-09-16T11:39:17,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,12,blue,right,put the blue block in the right bowl,1,,65.5,2026-09-16T11:40:34,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,13,red,left,put the red block in the left bowl,1,,64.9,2026-09-16T11:41:51,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.4,2026-09-16T11:43:22,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,15,red,left,put the red block in the left bowl,0,touch_no_grip,64.0,2026-09-16T11:44:55,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,16,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.5,2026-09-16T11:46:46,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,17,red,left,put the red block in the left bowl,0,touch_no_grip,64.6,2026-09-16T11:48:19,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,18,blue,right,put the blue block in the right bowl,0,no_reach,64.2,2026-09-16T11:49:43,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,19,red,left,put the red block in the left bowl,0,touch_no_grip,64.0,2026-09-16T11:52:37,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync
+smolvla_simreal_v2_pair,20,blue,right,put the blue block in the right bowl,1,,64.3,2026-09-16T11:54:01,experiments/checkpoints/smolvla_so101_blocks_simreal_v2_20000_ep0-49_100-149_150-249,sync

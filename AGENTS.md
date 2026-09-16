@@ -12,7 +12,7 @@ setup notes, and results for one rig: an SO-101 leader/follower arm pair, two US
 
 The experiments (one task, three policies plus a language-model extension, a data-scaling sweep, a camera
 ablation, an execution-method test, a 20-trial eval protocol) are described in `experiments/README.md`. Read
-that first. The published write-up is https://timzwu.substack.com/p/teaching-a-robot-to-pick-up-a-block.
+that first. The published articles and their media indexes are linked from the root README; `sim/README.md` covers the simulation follow-up.
 
 ## Layout
 
@@ -20,6 +20,8 @@ that first. The published write-up is https://timzwu.substack.com/p/teaching-a-r
 |---|---|
 | `experiments/` | The real content: Modal trainer, data-scaling sweep, 20-position eval protocol, rig config, results. See `experiments/README.md`. |
 | `experiments/results/` | Committed CSVs, write-ups, plots and final reels, one folder per experiment (`01_model_comparison` … `06_general_llm`); raw trial footage under `trials/` is gitignored. |
+| `sim/` | Isaac Lab scene, scripted demonstrations, policy evaluations, and methods for Post #1. |
+| `experiments/article-media/`, `sim/article-media/` | Complete indexes of the selected publication figures, tables, and videos. |
 | `experiments/checkpoints/` | Pulled checkpoints. **Gitignored.** |
 | `notes/setup.md` | Environment and hardware setup walkthrough with rationale. Human-facing. Its TODO list is historical. |
 | `scripts/` | Reusable shell wrappers, e.g. `scripts/teleop.sh`. Long CLI invocations go here, never pasted. |
@@ -55,7 +57,7 @@ bash scripts/teleop.sh                                   # leader moves by hand,
 lerobot-find-port                                        # once per arm, when a port changes
 lerobot-find-cameras opencv                              # camera indices + a test frame each
 
-# Modal (costs money; see experiments/README.md for the full recipe)
+# Modal (costs money; see experiments/results/01_model_comparison/methods.md for the full recipe)
 modal run experiments/tools/modal_train.py::main --dry-run           # prints the lerobot-train command, no spend
 modal run --detach experiments/tools/modal_train.py::main --steps 2000 --batch-size 8 --yes
 modal run experiments/tools/modal_train.py::pull --job-name <job>   # copy a checkpoint to experiments/checkpoints/
@@ -76,6 +78,7 @@ There is no test suite. Before committing a script change, run the cheapest thin
 
 - Scripts are plain Python with argparse or Modal local entrypoints; no framework, no packaging.
 - Camera keys in configs must match the dataset's `observation.images.*` names.
+- Videos use the explicit `.gitignore` allowlist: five treated publication copies, approved unchanged Astra/overhead replay, and simulator-only reels. Raw per-episode footage stays ignored.
 - Results go in `experiments/results/` and are committed; checkpoints and outputs never are.
 - Put long multi-line commands in `scripts/`; pasted multi-line commands break in the owner's terminal.
 - Notebooks: clear outputs before committing.

@@ -118,39 +118,41 @@ def main() -> None:
 
     r = json.load(open(args.robot_config))
     clamp = r.get("max_relative_target", 5.0) if args.clamp is None else args.clamp
+    if clamp is not None and clamp < 0:
+        ap.error("--clamp must be nonnegative")
     rename = dict(p.split("=") for p in args.camera_rename.split(",")) if args.camera_rename else {}
     keep = set(args.cameras.split(",")) if args.cameras else set(r["cameras"])
     cams = {rename.get(k, k): OpenCVCameraConfig(index_or_path=v["index_or_path"], width=v["width"],
                                                   height=v["height"], fps=v["fps"]) for k, v in r["cameras"].items() if k in keep}
     bot = SO101Follower(SOFollowerRobotConfig(port=r["port"], id=r["id"], cameras=cams))
     bot.connect(calibrate=False)
-    if args.server:
-        remote = RemoteChunkSource(args.server, args.policy, args.policy_type, args.policy_device, args.chunk, bot)
-        get_chunk = remote.get_chunk
-    else:
-        pol, pre, post = load_policy(args.policy, args.policy_type, args.device)
-        n_steps = getattr(pol.config, "n_action_steps", args.chunk)
-        if args.chunk > n_steps:
-            raise SystemExit(f"--chunk {args.chunk} exceeds the policy's n_action_steps {n_steps}; a second inference would run mid-chunk")
-
-        def get_chunk(raw, state):
-            obs = {"observation.state": torch.tensor(state)[None], "task": [args.task]}
-            for k in cams:
-                obs[f"observation.images.{k}"] = torch.tensor(np.ascontiguousarray(raw[k])).permute(2, 0, 1).float()[None] / 255
-            batch = pre(obs)
-            pol.reset()
-            out = []
-            with torch.no_grad():
-                for _ in range(args.chunk):
-                    a = post(pol.select_action(batch))
-                    out.append((a["action"] if isinstance(a, dict) else a)[0].float().cpu().numpy())
-            return np.stack(out)
-    moved = 0.0
     rec = None
-    if args.record:
-        Path(args.record).parent.mkdir(parents=True, exist_ok=True)
-        rec = cv2.VideoWriter(args.record, cv2.VideoWriter_fourcc(*"mp4v"), args.fps, (640 * len(cams), 480))
     try:
+        if args.server:
+            remote = RemoteChunkSource(args.server, args.policy, args.policy_type, args.policy_device, args.chunk, bot)
+            get_chunk = remote.get_chunk
+        else:
+            pol, pre, post = load_policy(args.policy, args.policy_type, args.device)
+            n_steps = getattr(pol.config, "n_action_steps", args.chunk)
+            if args.chunk > n_steps:
+                raise SystemExit(f"--chunk {args.chunk} exceeds the policy's n_action_steps {n_steps}; a second inference would run mid-chunk")
+
+            def get_chunk(raw, state):
+                obs = {"observation.state": torch.tensor(state)[None], "task": [args.task]}
+                for k in cams:
+                    obs[f"observation.images.{k}"] = torch.tensor(np.ascontiguousarray(raw[k])).permute(2, 0, 1).float()[None] / 255
+                batch = pre(obs)
+                pol.reset()
+                out = []
+                with torch.no_grad():
+                    for _ in range(args.chunk):
+                        a = post(pol.select_action(batch))
+                        out.append((a["action"] if isinstance(a, dict) else a)[0].float().cpu().numpy())
+                return np.stack(out)
+        moved = 0.0
+        if args.record:
+            Path(args.record).parent.mkdir(parents=True, exist_ok=True)
+            rec = cv2.VideoWriter(args.record, cv2.VideoWriter_fourcc(*"mp4v"), args.fps, (640 * len(cams), 480))
         time.sleep(1.0)  # let the cameras' exposure settle (their capture threads run on their own; reads never block)
         c = 0
         while moved < args.duration:
@@ -167,7 +169,7 @@ def main() -> None:
             for a in chunk:
                 t_step = time.time()
                 executed += 1
-                cur = cur + np.clip(a - cur, -clamp, clamp)
+                cur = a.copy() if not clamp else cur + np.clip(a - cur, -clamp, clamp)
                 bot.send_action({f"{j}.pos": float(cur[i]) for i, j in enumerate(JOINTS)})
                 if rec is not None:
                     raw = bot.get_observation()

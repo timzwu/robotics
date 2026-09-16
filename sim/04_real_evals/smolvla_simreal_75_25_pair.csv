@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+smolvla_simreal_75_25_pair,1,red,left,put the red block in the left bowl,0,touch_no_grip,66.1,2026-09-16T11:56:53,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,2,blue,right,put the blue block in the right bowl,0,no_reach,65.5,2026-09-16T11:58:13,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,3,red,left,put the red block in the left bowl,0,timeout,64.5,2026-09-16T11:59:39,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,4,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.5,2026-09-16T12:01:06,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,5,red,left,put the red block in the left bowl,0,touch_no_grip,64.7,2026-09-16T12:03:05,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,6,blue,right,put the blue block in the right bowl,0,no_reach,65.3,2026-09-16T12:04:18,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,7,red,left,put the red block in the left bowl,0,touch_no_grip,65.1,2026-09-16T12:05:40,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,8,blue,right,put the blue block in the right bowl,0,no_reach,64.1,2026-09-16T12:07:03,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,9,red,left,put the red block in the left bowl,0,touch_no_grip,64.3,2026-09-16T12:08:22,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,10,blue,right,put the blue block in the right bowl,0,touch_no_grip,63.9,2026-09-16T12:09:46,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,11,red,left,put the red block in the left bowl,0,no_move,64.4,2026-09-16T12:11:11,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,12,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.3,2026-09-16T12:12:23,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,13,red,left,put the red block in the left bowl,1,,64.5,2026-09-16T12:13:40,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.3,2026-09-16T12:15:03,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,15,red,left,put the red block in the left bowl,1,,64.3,2026-09-16T12:16:21,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,16,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.0,2026-09-16T12:17:42,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,17,red,left,put the red block in the left bowl,0,touch_no_grip,64.3,2026-09-16T12:18:58,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,18,blue,right,put the blue block in the right bowl,0,touch_no_grip,64.0,2026-09-16T12:20:15,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,19,red,left,put the red block in the left bowl,0,no_reach,64.0,2026-09-16T12:21:51,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync
+smolvla_simreal_75_25_pair,20,blue,right,put the blue block in the right bowl,1,,64.5,2026-09-16T12:23:08,experiments/checkpoints/smolvla_so101_blocks_simreal_20000_ep0-49_100-149_150-182,sync

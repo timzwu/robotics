@@ -11,7 +11,7 @@ approaches, recovery attempts, and a closer visual match would improve learning.
 | Gripper opening | 20 | 22–35 on the arm's control scale |
 | Grasp and timing | Consistent grasp point, segment timing ±20% | Grasp adjustment ±4 mm, varied closing command, timing ×0.6–1.4 |
 | Block placement | 5 cm margin inside the zone | Broader coverage; 30% of starts near a marked evaluation position |
-| Appearance | Drawn mat, randomized robot and lighting | Photo-textured mat, added block/bowl color variation, wider camera pose variation |
+| Appearance | Drawn mat, randomized robot and lighting | Photo-textured mat, added block/bowl color variation, wider overhead-camera pose variation |
 
 The fine-tunes used 100 sim v2 demonstrations, alone or co-trained with the same 100 real demonstrations.
 Recording averaged about 135 attempts and 76 minutes per 100 accepted episodes on an A10.

@@ -7,7 +7,7 @@ episodes `0–49,100–149`, and balanced across the recording batches. The 100-
 From the repository root, with `HF_USER` set to the dataset owner:
 
 ```bash
-modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50 --pool 0-49,100-149 --strata 25 --seed 0 --steps 20000 --batch-size 64 --gpu L40S --rename-map top=camera1,wrist=camera2 --yes
+modal run --detach experiments/tools/sweep.py::sweep --dataset $HF_USER/so101_blocks --policy smolvla --sizes 10,25,50 --pool 0-49,100-149 --strata 25 --seed 0 --steps 20000 --batch-size 64 --gpu L40S --rename-map '{"observation.images.top":"observation.images.camera1","observation.images.wrist":"observation.images.camera2"}'  --yes
 ```
 
 Fixed steps mean different amounts of data reuse: roughly 240, 95, 48, and 24 passes through the data. That does

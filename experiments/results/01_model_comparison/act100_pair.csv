@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+act100_pair,1,red,left,put the red block in the left bowl,0,touch_no_grip,44.8,2026-09-08T20:27:52,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,2,blue,right,put the blue block in the right bowl,0,touch_no_grip,43.5,2026-09-08T20:29:08,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,3,red,left,put the red block in the left bowl,0,touch_no_grip,43.3,2026-09-08T20:30:19,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,4,blue,right,put the blue block in the right bowl,0,collision,43.5,2026-09-08T20:31:30,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,5,red,left,put the red block in the left bowl,0,touch_no_grip,43.4,2026-09-08T20:32:53,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,6,blue,right,put the blue block in the right bowl,0,touch_no_grip,43.4,2026-09-08T20:33:58,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,7,red,left,put the red block in the left bowl,0,touch_no_grip,43.4,2026-09-08T20:35:09,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,8,blue,right,put the blue block in the right bowl,0,collision,43.3,2026-09-08T20:36:45,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,9,red,left,put the red block in the left bowl,0,touch_no_grip,43.7,2026-09-08T20:37:49,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,10,blue,right,put the blue block in the right bowl,0,touch_no_grip,43.2,2026-09-08T20:39:27,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,11,red,left,put the red block in the left bowl,0,touch_no_grip,43.3,2026-09-08T20:40:36,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,12,blue,right,put the blue block in the right bowl,0,no_reach,43.5,2026-09-08T20:41:38,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,13,red,left,put the red block in the left bowl,0,touch_no_grip,43.4,2026-09-08T20:42:41,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,14,blue,right,put the blue block in the right bowl,1,,43.6,2026-09-08T20:43:49,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,15,red,left,put the red block in the left bowl,0,touch_no_grip,43.3,2026-09-08T20:44:55,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,16,blue,right,put the blue block in the right bowl,0,no_reach,43.5,2026-09-08T20:46:02,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,17,red,left,put the red block in the left bowl,0,touch_no_grip,43.3,2026-09-08T20:47:02,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,18,blue,right,put the blue block in the right bowl,0,no_reach,43.3,2026-09-08T20:48:01,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,19,red,left,put the red block in the left bowl,0,no_reach,43.4,2026-09-08T20:48:58,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local
+act100_pair,20,blue,right,put the blue block in the right bowl,0,drop,43.4,2026-09-08T20:50:07,experiments/checkpoints/act_so101_blocks_20000_ep0-49_100-149,local

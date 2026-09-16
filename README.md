@@ -9,7 +9,7 @@ transfer between robot bodies and reinforcement learning.
 | # | Post | What it covers | Where the work is |
 |---|---|---|---|
 | 0 | [Teaching a Robot to Pick Up a Block](https://timzwu.substack.com/p/teaching-a-robot-to-pick-up-a-block) (Sept 14, 2026) | ACT vs SmolVLA vs π0.5 on one pick-and-place task, a data-scaling curve, a camera ablation, Real-Time Chunking, and GPT-6 Astra with no demonstrations | [`experiments/`](experiments/) |
-| 1 | [The Simulation Gap in Robotics](https://timzwu.substack.com/p/the-simulation-gap-in-robotics) (Sept 17, 2026) | Scripted data in Isaac Sim: sim v1 vs v2, sim-only vs co-training, and evaluation in both environments | [`sim/`](sim/) |
+| 1 | [The Simulation Gap in Robotics](https://timzwu.substack.com/p/the-simulation-gap-in-robotics) (Sept 16, 2026) | Scripted data in Isaac Sim: sim v1 vs v2, sim-only vs co-training, and evaluation in both environments | [`sim/`](sim/) |
 
 ## 0 · Three generations of robot policy on one task
 

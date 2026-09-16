@@ -1,5 +1,7 @@
 # Setup notes
 
+Hardware notes describe this particular rig. The checklist below records the initial setup; current experiments and results are in the [repository overview](../README.md).
+
 ## Environment
 
 - Machine: macOS (Apple Silicon)
@@ -27,13 +29,13 @@ conda activate lerobot   # run this each new shell
 conda install -y -c conda-forge ffmpeg      # got ffmpeg 8.1.2, incl. libsvtav1 encoder
 
 # lerobot + the Feetech motor SDK (SO-101 uses Feetech servos — required for the arms)
-pip install 'lerobot[feetech]'
+pip install 'lerobot[core_scripts,feetech]==0.6.1' modal
 ```
 
 Verify:
 
 ```bash
-python -c "import lerobot, torch; print(lerobot.__version__, torch.__version__)"  # 0.5.1 2.10.0
+python -c "import importlib.metadata, torch; print(importlib.metadata.version('lerobot'), torch.__version__)"  # experiment environment: 0.6.1, 2.11.0
 python -c "import scservo_sdk; print('feetech SDK OK')"
 ffmpeg -hide_banner -encoders | grep svtav1    # confirm the AV1 encoder is present
 ```
@@ -80,8 +82,7 @@ Calibration = move all joints to mid-range → Enter → sweep each joint throug
 range. Saved permanently to `~/.cache/huggingface/lerobot/calibration/` under the `id`
 (so it survives unplugs/reboots — you don't recalibrate each session). Output is just
 per-joint `homing_offset` (zero point) + `range_min`/`range_max` (travel) in raw 12-bit
-encoder ticks. Normalizing against these is what makes joint positions mean the same
-thing across robots — i.e. what makes datasets portable.
+encoder ticks. These values define this arm’s joint coordinates. Consistent calibration helps compare recordings; it does not by itself make a dataset portable across robot bodies.
 
 **Use the same `id`s (`follower_arm`, `leader_arm`) for teleop, recording, and eval.**
 
@@ -117,12 +118,11 @@ Layered protection so API keys / tokens never land in a commit:
 3. **Watch notebooks** — cell outputs are saved JSON. Never `print()` a token; clear
    outputs before committing.
 4. **gitleaks pre-commit hook** (`.git/hooks/pre-commit`) scans staged changes and
-   blocks any commit containing a detected secret. Bypass a false positive with
-   `git commit --no-verify`.
+   blocks any commit containing a detected secret. Review any finding and remove the secret or document a narrowly scoped false-positive exception.
    - Note: this hook is local to this clone (`.git/hooks/` is untracked) — it won't
      follow a fresh `git clone`. Reinstall it, or move to a tracked pre-commit config.
 
-## TODO
+## Initial setup checklist (historical)
 
 - [x] GitHub auth (gh, HTTPS) + gitleaks pre-commit hook
 - [x] Miniforge + `lerobot` conda env (Python 3.12.13)

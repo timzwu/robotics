@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+pi05_all4,1,red,left,put the red block in the left bowl,0,no_reach,172.4,2026-09-12T16:38:15,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,2,blue,right,put the blue block in the right bowl,0,touch_no_grip,69.7,2026-09-12T16:39:52,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,3,red,right,put the red block in the right bowl,0,no_reach,69.7,2026-09-12T16:41:30,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,4,blue,left,put the blue block in the left bowl,0,no_reach,71.7,2026-09-12T16:43:10,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,5,red,left,put the red block in the left bowl,0,touch_no_grip,70.0,2026-09-12T16:44:38,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,6,blue,right,put the blue block in the right bowl,0,touch_no_grip,74.0,2026-09-12T16:47:00,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,7,red,right,put the red block in the right bowl,0,touch_no_grip,68.2,2026-09-12T16:48:35,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,8,blue,left,put the blue block in the left bowl,0,no_reach,72.9,2026-09-12T16:50:13,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,9,red,left,put the red block in the left bowl,1,,71.1,2026-09-12T16:52:00,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,10,blue,right,put the blue block in the right bowl,0,touch_no_grip,128.8,2026-09-12T16:54:27,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,11,red,right,put the red block in the right bowl,0,touch_no_grip,74.4,2026-09-12T16:56:15,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,12,blue,left,put the blue block in the left bowl,0,no_reach,74.4,2026-09-12T16:57:46,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,13,red,left,put the red block in the left bowl,0,touch_no_grip,73.3,2026-09-12T16:59:31,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,74.8,2026-09-12T17:02:41,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,15,red,right,put the red block in the right bowl,0,touch_no_grip,75.0,2026-09-12T17:04:38,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,16,blue,left,put the blue block in the left bowl,0,touch_no_grip,74.3,2026-09-12T17:06:13,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,17,red,left,put the red block in the left bowl,0,touch_no_grip,74.6,2026-09-12T17:07:52,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,18,blue,right,put the blue block in the right bowl,0,touch_no_grip,78.0,2026-09-12T17:09:40,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,19,red,right,put the red block in the right bowl,1,,74.1,2026-09-12T17:11:12,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync
+pi05_all4,20,blue,left,put the blue block in the left bowl,0,touch_no_grip,74.8,2026-09-12T17:12:56,/outputs/pi05_so101_blocks_40000_ep0-49_100-149-20260911-221316/checkpoints/last/pretrained_model,sync

@@ -34,6 +34,8 @@ import csv
 import json
 import math
 import os
+import queue
+import threading
 import shlex
 import signal
 import subprocess
@@ -196,55 +198,76 @@ def build_command(args, task: str, position: int = 0) -> list[str] | None:
     sys.exit(f"unknown mode {args.mode}")
 
 
-def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None = None) -> tuple[float, int]:
-    """Run the policy command for up to `duration` seconds. Returns wall time actually used."""
-    t0 = time.time()
+def run_trial(cmd: list[str] | None, duration: float, start_marker: str | None = None,
+              startup_timeout: float = 120) -> tuple[float, int]:
+    """Return elapsed trial time and exit status; 124 means a startup/rollout timeout."""
+    t0 = time.monotonic()
     if cmd is None:
         input(f"  Run the policy now (~{duration:.0f}s). Press Enter when the trial is over... ")
-        return time.time() - t0, 0
+        return time.monotonic() - t0, 0
     print("  $", " ".join(shlex.quote(c) for c in cmd))
-    if start_marker is None:
-        proc = subprocess.Popen(cmd)
-        try:
-            proc.wait(timeout=duration + 300)  # rollout stops itself at --duration; +300 s covers a pi0.5 server load (~100-140 s) and think pauses
-        except subprocess.TimeoutExpired:
+
+    def stop(proc):
+        if proc.poll() is None:
             proc.send_signal(signal.SIGINT)
             try:
                 proc.wait(timeout=10)
             except subprocess.TimeoutExpired:
                 proc.kill()
-        except KeyboardInterrupt:
-            proc.send_signal(signal.SIGINT)
-            proc.wait(timeout=10)
-            raise
-        return time.time() - t0, int(proc.returncode or 0)
+                proc.wait()
 
-    # Async client: the clock starts only when the control loop starts (after the server has loaded the
-    # model, which can take 20-30 s on the first trial), so every trial gets the full `duration` of motion.
-    env = dict(os.environ, PYTHONUNBUFFERED="1")  # else the client's log lines arrive in blocks, late
-    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, env=env)
+    if start_marker is None:
+        proc = subprocess.Popen(cmd)
+        try:
+            proc.wait(timeout=duration + 300)
+        except subprocess.TimeoutExpired:
+            stop(proc)
+            return time.monotonic() - t0, 124
+        except KeyboardInterrupt:
+            stop(proc)
+            raise
+        return time.monotonic() - t0, proc.returncode
+
+    # Read logs in a daemon thread so a quiet client cannot block the trial deadline.
+    env = dict(os.environ, PYTHONUNBUFFERED="1")
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                            text=True, bufsize=1, env=env)
+    lines = queue.Queue()
+
+    def read_output():
+        try:
+            for line in proc.stdout:
+                lines.put(line)
+        finally:
+            lines.put(None)
+
+    reader = threading.Thread(target=read_output, daemon=True)
+    reader.start()
     started = None
     try:
-        for line in proc.stdout:
+        while True:
+            now = time.monotonic()
+            deadline = started + duration if started is not None else t0 + startup_timeout
+            if now >= deadline:
+                completed = started is not None
+                stop(proc)
+                return now - (started if completed else t0), 0 if completed else 124
+            try:
+                line = lines.get(timeout=min(0.1, deadline - now))
+            except queue.Empty:
+                continue
+            if line is None:
+                proc.wait(timeout=10)
+                # An async client is expected to stay alive until we stop it.
+                return time.monotonic() - (started if started is not None else t0), proc.returncode or 1
             print("   ", line.rstrip()[:160])
             if started is None and start_marker in line:
-                started = time.time()
+                started = time.monotonic()
                 print(f"  [eval] control loop started; running {duration:.0f}s")
-            if started is not None and time.time() - started >= duration:
-                break
-            if started is None and time.time() - t0 > duration + 120:
-                print("  [eval] client never started its control loop; stopping")
-                break
-        proc.send_signal(signal.SIGINT)   # robot_client runs forever; stop it cleanly
-        try:
-            proc.wait(timeout=10)
-        except subprocess.TimeoutExpired:
-            proc.kill()
-    except KeyboardInterrupt:
-        proc.send_signal(signal.SIGINT)
-        proc.wait(timeout=10)
-        raise
-    return (time.time() - started) if started else (time.time() - t0)
+    finally:
+        stop(proc)
+        reader.join(timeout=1)
+        proc.stdout.close()
 
 
 def ask_outcome() -> tuple[int, str, str]:

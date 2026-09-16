@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+smolvla_sim_simeval,1,red,left,put the red block in the left bowl,0,no_reach,30.0,2026-09-15T22:37:26,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,2,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:38:24,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,3,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:39:23,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,4,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:40:21,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,5,red,left,put the red block in the left bowl,0,no_reach,30.0,2026-09-15T22:41:20,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,6,blue,right,put the blue block in the right bowl,0,no_reach,30.0,2026-09-15T22:42:17,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,7,red,left,put the red block in the left bowl,0,no_reach,30.0,2026-09-15T22:43:16,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,8,blue,right,put the blue block in the right bowl,0,no_reach,30.0,2026-09-15T22:44:15,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,9,red,left,put the red block in the left bowl,0,no_reach,30.0,2026-09-15T22:45:14,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,10,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:46:11,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,11,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:47:10,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,12,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:48:08,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,13,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:49:09,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,14,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:50:07,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,15,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:51:06,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,16,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:52:05,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,17,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:53:04,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,18,blue,right,put the blue block in the right bowl,0,no_reach,30.0,2026-09-15T22:54:02,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,19,red,left,put the red block in the left bowl,0,touch_no_grip,30.0,2026-09-15T22:55:00,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim
+smolvla_sim_simeval,20,blue,right,put the blue block in the right bowl,0,touch_no_grip,30.0,2026-09-15T22:55:59,/outputs/smolvla_so101_blocks_sim_20000/checkpoints/020000/pretrained_model,sim

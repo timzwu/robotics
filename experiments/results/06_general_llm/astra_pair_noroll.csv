@@ -1,0 +1,21 @@
+name,position,color,bowl,task,success,failure_type,duration_s,timestamp,policy,mode
+astra_pair_noroll,1,red,left,put the red block in the left bowl,0,touch_no_grip,221.2,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,2,blue,right,put the blue block in the right bowl,1,,200.1,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,3,red,left,put the red block in the left bowl,0,touch_no_grip,187.0,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,4,blue,right,put the blue block in the right bowl,1,,58.7,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,5,red,left,put the red block in the left bowl,0,touch_no_grip,177.9,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,6,blue,right,put the blue block in the right bowl,0,touch_no_grip,184.4,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,7,red,left,put the red block in the left bowl,1,,56.7,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,8,blue,right,put the blue block in the right bowl,0,touch_no_grip,207.3,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,9,red,left,put the red block in the left bowl,1,,155.2,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,10,blue,right,put the blue block in the right bowl,1,,186.1,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,11,red,left,put the red block in the left bowl,1,,93.2,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,12,blue,right,put the blue block in the right bowl,1,,52.6,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,13,red,left,put the red block in the left bowl,0,touch_no_grip,168.3,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,14,blue,right,put the blue block in the right bowl,1,,92.5,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,15,red,left,put the red block in the left bowl,1,,70.1,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,16,blue,right,put the blue block in the right bowl,1,,53.5,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,17,red,left,put the red block in the left bowl,0,touch_no_grip,115.7,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,18,blue,right,put the blue block in the right bowl,1,,170.9,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,19,red,left,put the red block in the left bowl,0,touch_no_grip,188.7,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm
+astra_pair_noroll,20,blue,right,put the blue block in the right bowl,1,,64.7,2026-09-12 evening (recovered; exact time not preserved),"gpt-6-astra (no roll, no joint tool)",llm

@@ -11,7 +11,7 @@ TAG = os.environ.get("ISAAC_LAB_TAG", "2.3.2")
 # this module is imported inside the container as well (to hydrate the function): keep the laptop-only paths guarded
 if modal.is_local():
     ROOT = pathlib.Path(__file__).resolve().parents[2]
-    USD = pathlib.Path(os.environ.get("SO101_USD", "/private/tmp/claude-501/-Users-twu-robotics-physical-ai/03ab074a-df55-4acb-a71b-ba9346f5ca97/scratchpad/workshop/source/sim_to_real_so101/assets/usd/SO-ARM101-USD.usd"))
+    USD = pathlib.Path(os.environ.get("SO101_USD", "workshop/source/sim_to_real_so101/assets/usd/so101_new_calib/so101_new_calib.usd"))
     key_file = os.environ.get("NGC_KEY_FILE", "")
     ngc = modal.Secret.from_dict({"REGISTRY_USERNAME": "$oauthtoken", "REGISTRY_PASSWORD": open(os.path.expanduser(key_file)).read().strip()}) if key_file else None
 else:
