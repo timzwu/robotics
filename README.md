@@ -13,6 +13,10 @@ transfer between robot bodies and reinforcement learning.
 
 ## 0 · Three generations of robot policy on one task
 
+https://github.com/user-attachments/assets/9753732d-76e7-4aad-8f50-eaf26b349727
+
+*GPT-6 Astra controlling the SO-101 from camera images, with no demonstrations. Selected trials at 10× speed, including inference pauses.*
+
 ![Success rate on the trained task pair](experiments/results/01_model_comparison/model_comparison.png)
 
 | Model | Task demonstrations | Success (20 trials) | 95% interval |
@@ -27,6 +31,10 @@ control interface and about 100 s of thinking per trial. This comparison include
 for the six questions, protocol, and results.
 
 ## 1 · Learning from simulated demonstrations
+
+https://github.com/user-attachments/assets/6495337b-ebe8-4b67-b75e-14ec49c0b4f8
+
+*SmolVLA co-trained on real + sim v2 data: real-world evaluation above (7/20 successes), simulation below (4/20). All 20 trials at 10× speed.*
 
 ![Success in simulation and on the real arm](sim/04_real_evals/sim_vs_real_by_condition_v2.png)
 
